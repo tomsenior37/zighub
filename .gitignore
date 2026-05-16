@@ -29,6 +29,7 @@ build/
 out/
 .next/
 .turbo/
+coverage/
 
 # Editor / OS
 .DS_Store
