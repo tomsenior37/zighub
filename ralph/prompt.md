@@ -40,6 +40,15 @@ FEEDBACK LOOPS
 Before committing, run the stack-appropriate feedback loops detected above.
 Do not commit if tests or types are failing — fix them first.
 
+DELIVERABLES TICK
+Before committing, update `project/deliverables.md`:
+- Read the "Deliverables ticked" section of the issue file you just completed.
+- Change each matching `- [ ]` to `- [x]` in `deliverables.md`.
+- If an issue ticks something partially (e.g. "ESLint+Prettier portion") add a parenthetical note on the bullet rather than ticking it fully.
+- Stage `deliverables.md` as part of the same commit.
+
+If an issue file says "STOP — do not implement" or is marked as a sentinel/handoff, do NOT implement it, do NOT tick anything for it, and do NOT move it to `done/`. End the iteration with `<promise>NO MORE TASKS</promise>`.
+
 COMMIT
 Make a git commit. The commit message must:
 - Follow conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`
