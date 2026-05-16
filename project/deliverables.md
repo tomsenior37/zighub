@@ -15,7 +15,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Git repository initialised with `.gitignore`, `README.md`, licence
 - [x] Node + TypeScript scaffold
 - [ ] Linter, formatter, and pre-commit hooks configured (ESLint + Prettier landed in 01; pre-commit hooks pending in 05)
-- [ ] CI pipeline (lint, typecheck, tests) on every PR
+- [x] CI pipeline (lint, typecheck, tests) on every PR
 - [ ] Versioning and changelog convention agreed
 - [x] Distribution strategy decided — **Docker image + pure web UI** (see `project/decisions.md`)
 
