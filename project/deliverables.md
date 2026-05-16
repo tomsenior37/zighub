@@ -11,13 +11,13 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 ## 0. Project Foundation
 
-- [ ] Project name and branding decided
-- [ ] Git repository initialised with `.gitignore`, `README.md`, licence
-- [ ] Node + TypeScript scaffold (or Python + zigpy if that path is chosen)
+- [x] Project name and branding decided — **zighub** (see `project/decisions.md`)
+- [x] Git repository initialised with `.gitignore`, `README.md`, licence
+- [ ] Node + TypeScript scaffold
 - [ ] Linter, formatter, and pre-commit hooks configured
 - [ ] CI pipeline (lint, typecheck, tests) on every PR
 - [ ] Versioning and changelog convention agreed
-- [ ] Distribution strategy decided (Electron / Tauri / pure web + installers / Docker)
+- [x] Distribution strategy decided — **Docker image + pure web UI** (see `project/decisions.md`)
 
 ---
 
