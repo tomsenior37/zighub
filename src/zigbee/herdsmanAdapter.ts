@@ -3,6 +3,7 @@ import {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
   type CreateNetworkOptions,
+  type DeviceDefinition,
   type NetworkInfo,
   type ZigbeeAdapter,
   type ZigbeeEventHandler,
@@ -149,6 +150,29 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
 
     getNetworkInfo(): NetworkInfo | null {
       return pendingNetwork;
+    },
+
+    getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null> {
+      if (!running || !controller) return Promise.resolve(null);
+      try {
+        const device = controller.getDeviceByIeeeAddr(ieeeAddress) as
+          | {
+              modelID?: string;
+              manufacturerName?: string;
+              definition?: { exposes?: Record<string, unknown>[] } | null;
+            }
+          | undefined;
+        if (!device?.definition) return Promise.resolve(null);
+        const result: DeviceDefinition = {
+          exposes: device.definition.exposes ?? [],
+        };
+        if (device.modelID !== undefined) result.modelId = device.modelID;
+        if (device.manufacturerName !== undefined)
+          result.manufacturerName = device.manufacturerName;
+        return Promise.resolve(result);
+      } catch {
+        return Promise.resolve(null);
+      }
     },
   };
 }

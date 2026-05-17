@@ -17,6 +17,46 @@ export interface Device {
   user_notes: string | null;
   created_at: string;
   last_seen_at: string | null;
+  capabilities: Record<string, unknown>[] | null;
+}
+
+interface DeviceRow {
+  z2m_id: string;
+  friendly_name: string;
+  location_id: number | null;
+  model: string | null;
+  manufacturer: string | null;
+  role: DeviceRole;
+  user_notes: string | null;
+  created_at: string;
+  last_seen_at: string | null;
+  capabilities: string | null;
+}
+
+function parseCapabilities(raw: string | null): Record<string, unknown>[] | null {
+  if (raw === null) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as Record<string, unknown>[];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function rowToDevice(row: DeviceRow): Device {
+  return {
+    z2m_id: row.z2m_id,
+    friendly_name: row.friendly_name,
+    location_id: row.location_id,
+    model: row.model,
+    manufacturer: row.manufacturer,
+    role: row.role,
+    user_notes: row.user_notes,
+    created_at: row.created_at,
+    last_seen_at: row.last_seen_at,
+    capabilities: parseCapabilities(row.capabilities),
+  };
 }
 
 export interface CreateDeviceInput {
@@ -39,7 +79,7 @@ export interface DeviceGroup {
 }
 
 const DEVICE_COLUMNS =
-  "z2m_id, friendly_name, location_id, model, manufacturer, role, user_notes, created_at, last_seen_at";
+  "z2m_id, friendly_name, location_id, model, manufacturer, role, user_notes, created_at, last_seen_at, capabilities";
 
 function normaliseRequired(value: unknown, field: string): string {
   if (typeof value !== "string") {
@@ -110,9 +150,10 @@ export function create(db: Database.Database, input: CreateDeviceInput): Device 
 }
 
 export function get(db: Database.Database, z2mId: string): Device | undefined {
-  return db.prepare(`SELECT ${DEVICE_COLUMNS} FROM devices WHERE z2m_id = ?`).get(z2mId) as
-    | Device
+  const row = db.prepare(`SELECT ${DEVICE_COLUMNS} FROM devices WHERE z2m_id = ?`).get(z2mId) as
+    | DeviceRow
     | undefined;
+  return row ? rowToDevice(row) : undefined;
 }
 
 function requireDevice(db: Database.Database, z2mId: string): Device {
@@ -128,12 +169,13 @@ function fetchAllDevicesOrdered(
   where: string,
   params: unknown[] = [],
 ): Device[] {
-  return db
+  const rows = db
     .prepare(
       `SELECT ${DEVICE_COLUMNS} FROM devices ${where}
        ORDER BY friendly_name COLLATE NOCASE ASC`,
     )
-    .all(...params) as Device[];
+    .all(...params) as DeviceRow[];
+  return rows.map(rowToDevice);
 }
 
 function fetchLocations(db: Database.Database, ids: number[]): Map<number, Location> {
@@ -228,6 +270,17 @@ export function setNotes(db: Database.Database, z2mId: string, notes: string | n
 export function touchLastSeen(db: Database.Database, z2mId: string): Device {
   requireDevice(db, z2mId);
   db.prepare("UPDATE devices SET last_seen_at = datetime('now') WHERE z2m_id = ?").run(z2mId);
+  return requireDevice(db, z2mId);
+}
+
+export function setCapabilities(
+  db: Database.Database,
+  z2mId: string,
+  capabilities: Record<string, unknown>[] | null,
+): Device {
+  requireDevice(db, z2mId);
+  const json = capabilities === null ? null : JSON.stringify(capabilities);
+  db.prepare("UPDATE devices SET capabilities = ? WHERE z2m_id = ?").run(json, z2mId);
   return requireDevice(db, z2mId);
 }
 

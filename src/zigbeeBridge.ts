@@ -1,6 +1,12 @@
 import type Database from "better-sqlite3";
 import { log as auditLog } from "./domain/auditLog.js";
-import { ValidationError, create, deleteDevice, get as getDevice } from "./domain/devices.js";
+import {
+  ValidationError,
+  create,
+  deleteDevice,
+  get as getDevice,
+  setCapabilities,
+} from "./domain/devices.js";
 import type { ZigbeeAdapter, ZigbeeEvent, ZigbeeJoinedDevice } from "./zigbee/index.js";
 
 export interface ZigbeeBridgeDeps {
@@ -61,6 +67,12 @@ export function attachZigbeeBridge(deps: ZigbeeBridgeDeps): ZigbeeBridge {
     try {
       if (event.type === "deviceJoined") {
         handleJoin(db, event.device);
+        void enrichCapabilities(adapter, db, event.device.ieeeAddress).catch((err: unknown) => {
+          logger?.error(
+            { err, ieeeAddress: event.device.ieeeAddress },
+            "capability enrichment failed",
+          );
+        });
       } else if (event.type === "deviceLeft") {
         handleLeave(db, event.ieeeAddress);
       }
@@ -126,6 +138,16 @@ function handleLeave(db: Database.Database, ieeeAddress: string): void {
     event: "device-left",
     details: { ieeeAddress, hadRow: false },
   });
+}
+
+async function enrichCapabilities(
+  adapter: ZigbeeAdapter,
+  db: Database.Database,
+  ieeeAddress: string,
+): Promise<void> {
+  const def = await adapter.getDeviceDefinition(ieeeAddress);
+  if (!getDevice(db, ieeeAddress)) return;
+  setCapabilities(db, ieeeAddress, def?.exposes ?? null);
 }
 
 export const __testing = { shortName };
