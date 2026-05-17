@@ -1,0 +1,22 @@
+# Anything not needed inside the image
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+.changeset
+.vscode
+.idea
+.ralph-logs
+data
+*.log
+
+# Local-only project material
+issues
+project
+ralph
+
+# Test files are filtered by tsconfig.build.json but no reason to ship them
+**/*.test.ts
+**/*.spec.ts

@@ -301,19 +301,19 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 Per `project/decisions.md`, v1 ships as a Docker image only — no native installers, no code signing, no auto-update mechanism. Reconsider native packaging post-v1.0.
 
-- [ ] Docker image build pipeline (multi-arch: linux/amd64, linux/arm64)
-- [ ] Image published to ghcr.io/tomsenior37/zighub
-- [ ] Web UI default `localhost:8282` (overridable via `PORT`)
-- [ ] Coordinator USB device mount documented (`--device /dev/ttyUSB0`)
+- [x] Docker image build pipeline (multi-arch: linux/amd64, linux/arm64)
+- [x] Image published to ghcr.io/tomsenior37/zighub
+- [x] Web UI default `localhost:8282` (overridable via `PORT`)
+- [x] Coordinator USB device mount documented (`--device /dev/ttyUSB0`)
 - [ ] First-run experience tested via `docker pull` + `docker run`
-- [ ] docker-compose.yml example for typical deployment
-- [ ] Install documentation (Docker quick start, USB permissions per host OS)
+- [x] docker-compose.yml example for typical deployment
+- [x] Install documentation (Docker quick start, USB permissions per host OS)
 
 ---
 
 ## 15. Documentation
 
-- [ ] README with quick start
+- [x] README with quick start
 - [ ] Architecture overview
 - [ ] User guide — setup, devices, automations, backup
 - [ ] MCP integration guide (Claude Desktop config, Claude.ai connector)
