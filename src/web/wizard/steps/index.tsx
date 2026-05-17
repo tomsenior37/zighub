@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { UseWizardApi, WizardStepDef } from "../useWizard";
 import { CoordinatorStep } from "./CoordinatorStep";
+import { NetworkStep } from "./NetworkStep";
 import { WelcomeStep } from "./WelcomeStep";
 
 export interface WizardStepProps {
@@ -25,15 +26,7 @@ function PlaceholderStep(title: string, description: string) {
 export const WIZARD_STEPS: WizardStepEntry[] = [
   { id: "welcome", title: "Welcome", canSkip: false, Component: WelcomeStep },
   { id: "coordinator", title: "Coordinator", canSkip: false, Component: CoordinatorStep },
-  {
-    id: "network",
-    title: "Network",
-    canSkip: false,
-    Component: PlaceholderStep(
-      "Create a Zigbee network",
-      "We'll generate a fresh PAN ID and network key. This step lands in a follow-up.",
-    ),
-  },
+  { id: "network", title: "Network", canSkip: false, Component: NetworkStep },
   {
     id: "devices",
     title: "Pair devices",
