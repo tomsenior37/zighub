@@ -44,7 +44,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Network creation (new random PAN ID, network key)
 - [x] Permit-join window management (enable, disable, countdown)
 - [x] Device join event handler — store in DB with model lookup
-- [ ] Device leave / unpair handler
+- [x] Device leave / unpair handler
 - [ ] Live event stream subscription (messages, state changes)
 - [ ] Device capability extraction from `definition.exposes`
 - [ ] Manual command dispatch (set state, brightness, colour, etc.)

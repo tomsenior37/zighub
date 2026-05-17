@@ -142,6 +142,45 @@ describe("zigbeeBridge deviceJoined", () => {
     expect(listDevices(db).flatMap((g) => g.devices)).toHaveLength(1);
   });
 
+  it("deviceLeft removes the row and audit-logs with friendlyName", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    attachZigbeeBridge({ adapter, db });
+
+    adapter.simulateDeviceJoin({ ieeeAddress: "aa:bb", networkAddress: 1, modelId: "T1" });
+    adapter.simulateDeviceLeave("aa:bb");
+
+    expect(getDevice(db, "aa:bb")).toBeUndefined();
+    const leftEvents = listAudit(db, { category: "zigbee" }).filter(
+      (e) => e.event === "device-left",
+    );
+    expect(leftEvents).toHaveLength(1);
+    expect(leftEvents[0]?.details).toMatchObject({
+      ieeeAddress: "aa:bb",
+      hadRow: true,
+    });
+    expect(leftEvents[0]?.details.friendlyName).toBe("device_aabb");
+  });
+
+  it("deviceLeft for unknown device audit-logs hadRow:false without throwing", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    // Make the mock fire even for unknown — adapter from p2-05 only fires
+    // simulateDeviceLeave if the device existed, so we test via direct event.
+    attachZigbeeBridge({ adapter, db });
+
+    // Simulate a join then leave to drive the path through the mock.
+    adapter.simulateDeviceJoin({ ieeeAddress: "cc:dd", networkAddress: 1 });
+    db.prepare("DELETE FROM devices WHERE z2m_id = ?").run("cc:dd");
+    adapter.simulateDeviceLeave("cc:dd");
+
+    const leftEvents = listAudit(db, { category: "zigbee" }).filter(
+      (e) => e.event === "device-left",
+    );
+    expect(leftEvents).toHaveLength(1);
+    expect(leftEvents[0]?.details).toMatchObject({ ieeeAddress: "cc:dd", hadRow: false });
+  });
+
   it("handler errors are logged but never crash the caller", async () => {
     const adapter = createMockAdapter();
     await adapter.start();
