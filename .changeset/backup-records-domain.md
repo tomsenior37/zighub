@@ -1,0 +1,5 @@
+---
+"zighub": minor
+---
+
+Add `backup_records` table (migration `0006_backup_records.sql`) and `src/domain/backupRecords.ts` with `create`, `list`, `get`, `recordCloudUpload`, `markLocalDeleted`, and `deleteBackupRecord`. The table indexes locally-produced `.zbk` backups and their per-provider cloud upload status; the `.zbk` archive writer itself is out of scope here (Phase 2). `cloud_uploads` is stored as JSON in a single TEXT column and parsed/serialised at the boundary so callers see `Array<{ provider, status, remoteId, uploadedAt }>`; corrupted or non-array JSON parses to `[]`. `recordCloudUpload(id, { provider, status, remoteId })` replaces any existing entry for the same provider rather than duplicating — a failed upload followed by a successful retry leaves a single `success` entry. `markLocalDeleted(id)` nulls `local_path` while preserving `cloud_uploads`, modelling the "local copy gone, cloud copy still around" state. `list({ limit?, offset? })` orders by `(created_at DESC, id DESC)` with default `limit = 100`.
