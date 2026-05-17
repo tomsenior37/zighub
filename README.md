@@ -44,6 +44,10 @@ CLAUDE.md               # project-level instructions for Claude
 - **AFK** issues live in `issues/afk/`. They are well-scoped, low-risk, and safe for the runner to pick up without supervision.
 - **HITL** issues live in `issues/hitl/`. They need a human in the loop — design decisions, ambiguous scope, sensitive changes. Ralph ignores them.
 
+## Adding a changeset
+
+Every PR that changes runtime behaviour adds a [changeset](https://github.com/changesets/changesets). Run `npx changeset` and pick a bump level (patch / minor / major) plus a short user-facing summary — the tool writes a markdown file under `.changeset/` that you commit alongside your code. On release, `npx changeset version` consumes those files to bump `package.json` and regenerate `CHANGELOG.md`. Conventional Commits still govern commit messages; changesets are orthogonal and track only what users see in the changelog.
+
 ## Requirements
 
 - [Claude Code](https://claude.com/claude-code) CLI on `PATH`
