@@ -16,7 +16,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Node + TypeScript scaffold
 - [x] Linter, formatter, and pre-commit hooks configured
 - [x] CI pipeline (lint, typecheck, tests) on every PR
-- [ ] Versioning and changelog convention agreed
+- [x] Versioning and changelog convention agreed — **changesets** (see `.changeset/` and README)
 - [x] Distribution strategy decided — **Docker image + pure web UI** (see `project/decisions.md`)
 
 ---
