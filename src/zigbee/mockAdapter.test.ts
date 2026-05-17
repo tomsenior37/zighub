@@ -194,6 +194,43 @@ describe("mockAdapter events", () => {
   });
 });
 
+describe("mockAdapter network", () => {
+  it("createNetwork returns NetworkInfo and getNetworkInfo reflects it", async () => {
+    const adapter = createMockAdapter({ now: () => 1_700_000_000_000 });
+    await adapter.start();
+
+    expect(adapter.getNetworkInfo()).toBeNull();
+
+    const info = await adapter.createNetwork({ channel: 20, panId: 0x9abc });
+    expect(info.channel).toBe(20);
+    expect(info.panId).toBe(0x9abc);
+    expect(info.createdAt).toBe(1_700_000_000_000);
+    expect(info.networkKeyHash).toMatch(/^[0-9a-f]{64}$/);
+
+    expect(adapter.getNetworkInfo()).toEqual(info);
+  });
+
+  it("createNetwork with defaults generates random panId and key", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+
+    const a = await adapter.createNetwork();
+    const b = await adapter.createNetwork();
+    expect(a.networkKeyHash).not.toBe(b.networkKeyHash);
+  });
+
+  it("createNetwork rejects out-of-range channel and panId", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    await expect(adapter.createNetwork({ channel: 30 })).rejects.toMatchObject({
+      code: "INVALID_CHANNEL",
+    });
+    await expect(adapter.createNetwork({ panId: 0xffff })).rejects.toMatchObject({
+      code: "INVALID_PAN_ID",
+    });
+  });
+});
+
 describe("mockAdapter listJoinedDevices", () => {
   it("rejects when not running", async () => {
     const adapter = createMockAdapter();
