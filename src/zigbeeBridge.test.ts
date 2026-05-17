@@ -214,6 +214,28 @@ describe("zigbeeBridge deviceJoined", () => {
     expect(row?.capabilities).toBeNull();
   });
 
+  it("deviceMessage advances last_seen_at for known devices", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    attachZigbeeBridge({ adapter, db });
+
+    adapter.simulateDeviceJoin({ ieeeAddress: "11:22", networkAddress: 1 });
+    const beforeRow = getDevice(db, "11:22");
+    expect(beforeRow?.last_seen_at).toBeNull();
+
+    adapter.simulateMessage("11:22", { state: "ON" });
+    const afterRow = getDevice(db, "11:22");
+    expect(afterRow?.last_seen_at).not.toBeNull();
+  });
+
+  it("deviceMessage for unknown device is silently ignored (no throw)", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    attachZigbeeBridge({ adapter, db });
+
+    expect(() => adapter.simulateMessage("never-joined", { x: 1 })).not.toThrow();
+  });
+
   it("handler errors are logged but never crash the caller", async () => {
     const adapter = createMockAdapter();
     await adapter.start();

@@ -6,6 +6,7 @@ import {
   deleteDevice,
   get as getDevice,
   setCapabilities,
+  touchLastSeen,
 } from "./domain/devices.js";
 import type { ZigbeeAdapter, ZigbeeEvent, ZigbeeJoinedDevice } from "./zigbee/index.js";
 
@@ -75,6 +76,10 @@ export function attachZigbeeBridge(deps: ZigbeeBridgeDeps): ZigbeeBridge {
         });
       } else if (event.type === "deviceLeft") {
         handleLeave(db, event.ieeeAddress);
+      } else if (event.type === "deviceMessage") {
+        if (getDevice(db, event.ieeeAddress)) {
+          touchLastSeen(db, event.ieeeAddress);
+        }
       }
     } catch (err) {
       logger?.error({ err, event }, "zigbeeBridge handler failed");

@@ -5,6 +5,7 @@ import {
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
+  type PingResult,
   type ZigbeeAdapter,
   type ZigbeeEvent,
   type ZigbeeEventHandler,
@@ -166,6 +167,11 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
     sendCommand(ieeeAddress: string, payload: Record<string, unknown>): Promise<CommandResult> {
       state.commandLog.push({ ieeeAddress, payload: { ...payload } });
       return Promise.resolve({ accepted: true });
+    },
+
+    pingDevice(ieeeAddress: string): Promise<PingResult> {
+      const known = state.devices.has(ieeeAddress);
+      return Promise.resolve(known ? { ok: true, latencyMs: 1 } : { ok: false });
     },
 
     getCommandLog(): Array<{ ieeeAddress: string; payload: Record<string, unknown> }> {

@@ -6,6 +6,7 @@ import {
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
+  type PingResult,
   type ZigbeeAdapter,
   type ZigbeeEventHandler,
   type ZigbeeJoinStatus,
@@ -197,6 +198,21 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
           "COMMAND_FAILED",
           err instanceof Error ? err.message : String(err),
         );
+      }
+    },
+
+    async pingDevice(ieeeAddress: string): Promise<PingResult> {
+      if (!running || !controller) return { ok: false };
+      const device = controller.getDeviceByIeeeAddr(ieeeAddress) as
+        | { ping?: () => Promise<unknown> }
+        | undefined;
+      if (!device || typeof device.ping !== "function") return { ok: false };
+      const start = Date.now();
+      try {
+        await device.ping();
+        return { ok: true, latencyMs: Date.now() - start };
+      } catch {
+        return { ok: false };
       }
     },
 

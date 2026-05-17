@@ -117,3 +117,33 @@ describe("POST /api/devices/:ieeeAddress/command", () => {
     await adapter.stop();
   });
 });
+
+describe("GET /api/devices/:ieeeAddress/ping", () => {
+  it("returns ok:true for a known joined device", async () => {
+    createDevice(db, { z2m_id: "ping-1", friendly_name: "ping-test" });
+    const adapter = createMockAdapter();
+    await adapter.start();
+    adapter.simulateDeviceJoin({ ieeeAddress: "ping-1", networkAddress: 1 });
+    app = await buildServer({ db, zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/devices/ping-1/ping" });
+    expect(res.statusCode).toBe(200);
+    const body: { ok: boolean } = res.json();
+    expect(body.ok).toBe(true);
+
+    await adapter.stop();
+  });
+
+  it("returns 404 when device is unknown", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ db, zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/devices/missing/ping" });
+    expect(res.statusCode).toBe(404);
+
+    await adapter.stop();
+  });
+});

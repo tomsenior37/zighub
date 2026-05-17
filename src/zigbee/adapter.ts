@@ -51,6 +51,11 @@ export interface CommandResult {
   result?: unknown;
 }
 
+export interface PingResult {
+  ok: boolean;
+  latencyMs?: number;
+}
+
 export interface ZigbeeAdapter {
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -63,6 +68,7 @@ export interface ZigbeeAdapter {
   getNetworkInfo(): NetworkInfo | null;
   getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null>;
   sendCommand(ieeeAddress: string, payload: Record<string, unknown>): Promise<CommandResult>;
+  pingDevice(ieeeAddress: string): Promise<PingResult>;
 }
 
 export const NETWORK_CHANNEL_MIN = 11;
