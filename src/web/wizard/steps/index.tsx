@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { UseWizardApi, WizardStepDef } from "../useWizard";
+import { CompleteStep } from "./CompleteStep";
 import { CoordinatorStep } from "./CoordinatorStep";
 import { NetworkStep } from "./NetworkStep";
 import { PairStep } from "./PairStep";
@@ -29,13 +30,9 @@ export const WIZARD_STEPS: WizardStepEntry[] = [
   { id: "coordinator", title: "Coordinator", canSkip: false, Component: CoordinatorStep },
   { id: "network", title: "Network", canSkip: false, Component: NetworkStep },
   { id: "devices", title: "Pair devices", canSkip: true, Component: PairStep },
-  {
-    id: "complete",
-    title: "All done",
-    canSkip: false,
-    Component: PlaceholderStep(
-      "You're all set",
-      "zighub is ready. Head to the Devices page to manage what you've paired.",
-    ),
-  },
+  { id: "complete", title: "All done", canSkip: false, Component: CompleteStep },
 ];
+
+// PlaceholderStep is still here for future "skeleton" steps, even though no step
+// currently uses it.
+void PlaceholderStep;
