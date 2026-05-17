@@ -43,7 +43,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Manual coordinator selection fallback
 - [x] Network creation (new random PAN ID, network key)
 - [x] Permit-join window management (enable, disable, countdown)
-- [ ] Device join event handler — store in DB with model lookup
+- [x] Device join event handler — store in DB with model lookup
 - [ ] Device leave / unpair handler
 - [ ] Live event stream subscription (messages, state changes)
 - [ ] Device capability extraction from `definition.exposes`
