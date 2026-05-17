@@ -1,6 +1,7 @@
 import { createHerdsmanAdapter, type HerdsmanAdapterOptions } from "./herdsmanAdapter.js";
 import { createMockAdapter, type MockAdapterOptions } from "./mockAdapter.js";
 import type { ZigbeeAdapter } from "./adapter.js";
+import { SETTINGS_KEYS, type SettingsRepo } from "../domain/settings.js";
 
 export interface ZigbeeFactoryConfig {
   coordinatorPath?: string;
@@ -24,6 +25,22 @@ export interface ZigbeeFactoryResult {
 export interface CreateZigbeeAdapterDeps {
   env?: ZigbeeFactoryEnv;
   logger?: { warn: (msg: string) => void };
+  settings?: SettingsRepo;
+}
+
+interface CoordinatorSelection {
+  path: string;
+  selectedAt: number;
+}
+
+function resolveCoordinatorPath(
+  config: ZigbeeFactoryConfig,
+  settings: SettingsRepo | undefined,
+): string | undefined {
+  if (config.coordinatorPath) return config.coordinatorPath;
+  if (!settings) return undefined;
+  const stored = settings.get<CoordinatorSelection>(SETTINGS_KEYS.COORDINATOR_PATH);
+  return stored?.path;
 }
 
 export function createZigbeeAdapter(
@@ -41,7 +58,8 @@ export function createZigbeeAdapter(
     };
   }
 
-  if (!config.coordinatorPath || !config.databasePath) {
+  const coordinatorPath = resolveCoordinatorPath(config, deps.settings);
+  if (!coordinatorPath || !config.databasePath) {
     deps.logger?.warn(
       "ZIGBEE_ENABLED=1 but coordinatorPath or databasePath is unset; falling back to the mock adapter",
     );
@@ -53,7 +71,7 @@ export function createZigbeeAdapter(
   }
 
   const herdsmanOpts: HerdsmanAdapterOptions = {
-    coordinatorPath: config.coordinatorPath,
+    coordinatorPath,
     databasePath: config.databasePath,
     ...(config.backupPath !== undefined && { backupPath: config.backupPath }),
     ...(config.channel !== undefined && { channel: config.channel }),

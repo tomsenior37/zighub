@@ -3,6 +3,7 @@ import { getDb, resolveDbPath } from "./db/connection.js";
 import { runIntegrityCheck } from "./db/integrity.js";
 import { log as auditLog } from "./domain/auditLog.js";
 import { buildServer } from "./server.js";
+import { createSettingsRepo } from "./domain/settings.js";
 import { createZigbeeAdapter } from "./zigbee/factory.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
@@ -40,6 +41,7 @@ if (!integrity.ok) {
   failCorrupt(integrity.errors);
 }
 
+const settings = createSettingsRepo(db);
 const coordinatorPath = process.env.ZIGHUB_COORDINATOR_PATH;
 const zigbee = createZigbeeAdapter(
   {
@@ -48,10 +50,11 @@ const zigbee = createZigbeeAdapter(
   },
   {
     logger: { warn: (msg) => console.warn(`[zigbee] ${msg}`) },
+    settings,
   },
 );
 
-const app = await buildServer({ logger: true, zigbeeAdapter: zigbee.adapter });
+const app = await buildServer({ logger: true, zigbeeAdapter: zigbee.adapter, settings });
 app.log.info({ kind: zigbee.kind, reason: zigbee.reason }, "zigbee adapter ready");
 
 try {
