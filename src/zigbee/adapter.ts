@@ -27,6 +27,19 @@ export type ZigbeeEventHandler = (event: ZigbeeEvent) => void;
 
 export type Unsubscribe = () => void;
 
+export interface NetworkInfo {
+  panId: number;
+  channel: number;
+  extendedPanId: string;
+  networkKeyHash: string;
+  createdAt: number;
+}
+
+export interface CreateNetworkOptions {
+  channel?: number;
+  panId?: number;
+}
+
 export interface ZigbeeAdapter {
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -35,7 +48,15 @@ export interface ZigbeeAdapter {
   getJoinStatus(): ZigbeeJoinStatus;
   listJoinedDevices(): Promise<ZigbeeJoinedDevice[]>;
   onEvent(handler: ZigbeeEventHandler): Unsubscribe;
+  createNetwork(opts?: CreateNetworkOptions): Promise<NetworkInfo>;
+  getNetworkInfo(): NetworkInfo | null;
 }
+
+export const NETWORK_CHANNEL_MIN = 11;
+export const NETWORK_CHANNEL_MAX = 26;
+export const NETWORK_PAN_ID_MIN = 0x0001;
+export const NETWORK_PAN_ID_MAX = 0xfffe;
+export const NETWORK_DEFAULT_CHANNEL = 15;
 
 export class ZigbeeAdapterError extends Error {
   readonly code: string;

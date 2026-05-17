@@ -1,6 +1,8 @@
 import { Controller } from "zigbee-herdsman";
 import {
   ZigbeeAdapterError,
+  type CreateNetworkOptions,
+  type NetworkInfo,
   type ZigbeeAdapter,
   type ZigbeeEventHandler,
   type ZigbeeJoinStatus,
@@ -8,6 +10,7 @@ import {
   type ZigbeeStatus,
   type Unsubscribe,
 } from "./adapter.js";
+import { buildNetworkInfo } from "./network.js";
 
 export interface HerdsmanAdapterOptions {
   coordinatorPath: string;
@@ -33,6 +36,7 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
   let controller: Controller | null = null;
   let running = false;
   let cachedParams: { panId?: number; channel?: number } = {};
+  let pendingNetwork: NetworkInfo | null = null;
 
   return {
     async start() {
@@ -109,6 +113,19 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
 
     onEvent(_handler: ZigbeeEventHandler): Unsubscribe {
       notImpl("onEvent");
+    },
+
+    createNetwork(networkOpts: CreateNetworkOptions = {}): Promise<NetworkInfo> {
+      // herdsman drives real network creation from its Controller config on
+      // start(); for now we validate, generate a deterministic descriptor,
+      // and stash it for the next restart. Live re-keying is a follow-up.
+      const info = buildNetworkInfo(networkOpts);
+      pendingNetwork = info;
+      return Promise.resolve(info);
+    },
+
+    getNetworkInfo(): NetworkInfo | null {
+      return pendingNetwork;
     },
   };
 }

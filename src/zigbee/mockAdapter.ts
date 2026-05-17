@@ -1,6 +1,8 @@
 import {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
+  type CreateNetworkOptions,
+  type NetworkInfo,
   type ZigbeeAdapter,
   type ZigbeeEvent,
   type ZigbeeEventHandler,
@@ -9,6 +11,7 @@ import {
   type ZigbeeStatus,
   type Unsubscribe,
 } from "./adapter.js";
+import { buildNetworkInfo } from "./network.js";
 
 export interface MockAdapterOptions {
   now?: () => number;
@@ -31,6 +34,7 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
     devices: new Map<string, ZigbeeJoinedDevice>(),
     handlers: new Set<ZigbeeEventHandler>(),
     permitJoinEndsAt: 0,
+    network: null as NetworkInfo | null,
   };
 
   function ensureRunning(): void {
@@ -124,6 +128,16 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
     simulateMessage(ieeeAddress: string, payload: Record<string, unknown>): void {
       ensureRunning();
       emit({ type: "deviceMessage", ieeeAddress, payload });
+    },
+
+    async createNetwork(opts: CreateNetworkOptions = {}): Promise<NetworkInfo> {
+      const info = buildNetworkInfo(opts, now());
+      state.network = info;
+      return Promise.resolve(info);
+    },
+
+    getNetworkInfo(): NetworkInfo | null {
+      return state.network;
     },
   };
 }

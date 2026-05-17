@@ -298,6 +298,68 @@ describe("/api/coordinators/selected", () => {
   });
 });
 
+describe("/api/network/create", () => {
+  it("returns NetworkInfo and persists it via settings", async () => {
+    const db = new Database(":memory:");
+    migrate(db);
+    const settings = createSettingsRepo(db);
+    const adapter = createMockAdapter();
+    await adapter.start();
+
+    app = await buildServer({ zigbeeAdapter: adapter, settings });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/network/create",
+      payload: { channel: 22 },
+    });
+    expect(res.statusCode).toBe(200);
+    const body: { channel: number; panId: number; networkKeyHash: string } = res.json();
+    expect(body.channel).toBe(22);
+    expect(body.networkKeyHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(settings.get(SETTINGS_KEYS.NETWORK_INFO)).toMatchObject({ channel: 22 });
+
+    await adapter.stop();
+    db.close();
+  });
+
+  it("rejects out-of-range channel with 400", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/network/create",
+      payload: { channel: 30 },
+    });
+    expect(res.statusCode).toBe(400);
+
+    await adapter.stop();
+  });
+
+  it("GET /api/network returns null before creation and the info after", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ zigbeeAdapter: adapter });
+    await app.ready();
+
+    const before = await app.inject({ method: "GET", url: "/api/network" });
+    expect(before.statusCode).toBe(200);
+    expect(before.body).toBe("null");
+
+    await app.inject({ method: "POST", url: "/api/network/create", payload: {} });
+
+    const after = await app.inject({ method: "GET", url: "/api/network" });
+    const body: { channel: number } = after.json();
+    expect(body.channel).toBeGreaterThan(0);
+
+    await adapter.stop();
+  });
+});
+
 describe("/api/zigbee/status", () => {
   it("returns the adapter's getStatus when an adapter is wired in", async () => {
     const adapter = createMockAdapter({

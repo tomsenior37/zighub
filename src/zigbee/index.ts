@@ -1,6 +1,13 @@
 export {
+  NETWORK_CHANNEL_MAX,
+  NETWORK_CHANNEL_MIN,
+  NETWORK_DEFAULT_CHANNEL,
+  NETWORK_PAN_ID_MAX,
+  NETWORK_PAN_ID_MIN,
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
+  type CreateNetworkOptions,
+  type NetworkInfo,
   type Unsubscribe,
   type ZigbeeAdapter,
   type ZigbeeEvent,

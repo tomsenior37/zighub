@@ -41,7 +41,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] USB serial port enumeration
 - [x] Coordinator auto-detection by USB VID/PID (Sonoff Dongle-E, ConBee II/III, Slaeshs CC2652, others)
 - [x] Manual coordinator selection fallback
-- [ ] Network creation (new random PAN ID, network key)
+- [x] Network creation (new random PAN ID, network key)
 - [ ] Permit-join window management (enable, disable, countdown)
 - [ ] Device join event handler — store in DB with model lookup
 - [ ] Device leave / unpair handler
