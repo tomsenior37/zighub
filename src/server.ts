@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { registerCoordinatorRoutes } from "./coordinatorRoutes.js";
+import { registerDevicesRoutes } from "./devicesRoutes.js";
 import type { SerialPortLister } from "./coordinator/serialPorts.js";
 import type { SettingsRepo } from "./domain/settings.js";
 import { registerEventStreamRoute } from "./eventsStream.js";
@@ -40,6 +41,12 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
   if (opts.serialPortLister) coordinatorOpts.lister = opts.serialPortLister;
   if (opts.settings) coordinatorOpts.settings = opts.settings;
   registerCoordinatorRoutes(app, coordinatorOpts);
+
+  if (opts.db) {
+    const devicesOpts: Parameters<typeof registerDevicesRoutes>[1] = { db: opts.db };
+    if (opts.zigbeeAdapter) devicesOpts.adapter = opts.zigbeeAdapter;
+    registerDevicesRoutes(app, devicesOpts);
+  }
 
   const serveWeb = opts.serveStaticWeb ?? shouldServeStaticWeb();
   if (serveWeb) {

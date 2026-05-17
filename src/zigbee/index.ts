@@ -6,6 +6,7 @@ export {
   NETWORK_PAN_ID_MIN,
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
+  type CommandResult,
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
