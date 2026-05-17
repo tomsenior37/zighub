@@ -64,18 +64,22 @@ Built multi-arch (`linux/amd64`, `linux/arm64`) by `.github/workflows/release-im
 
 ## Development
 
-Workflow lives in this repo's `ralph/` runner and AFK/HITL issue queues — see `CLAUDE.md` for project-level instructions. Stack: Node 22 + TypeScript, Fastify, better-sqlite3, Vitest. ESLint + Prettier + husky pre-commit. Changesets for versioning.
+Workflow lives in this repo's `ralph/` runner and AFK/HITL issue queues — see `CLAUDE.md` for project-level instructions. Stack: Node 22 + TypeScript, Fastify, better-sqlite3, Vitest, Vite + React 19 for the web UI. ESLint + Prettier + husky pre-commit. Changesets for versioning.
 
 ```sh
 npm ci                # install
-npm run dev           # tsx watch
-npm run build         # compile to dist/ and copy SQL migrations
-npm start             # run the compiled server
+npm run dev           # backend (tsx watch) + Vite dev server in parallel
+npm run dev:api       # backend only (port 8282)
+npm run dev:web       # Vite dev server only (port 5173, proxies /health + /api to 8282)
+npm run build         # compile backend, copy migrations, build web SPA
+npm start             # run the compiled server (serves SPA when NODE_ENV=production)
 npm run db:migrate    # apply pending migrations to the configured DB
-npm test              # vitest run
-npm run typecheck     # tsc --noEmit
+npm test              # vitest run (node + jsdom projects)
+npm run typecheck     # tsc --noEmit for backend + src/web
 npm run lint          # eslint . --max-warnings=0
 ```
+
+In development, open <http://localhost:5173> for the UI (Vite serves React and proxies API/health requests to the backend on 8282). In production the compiled backend serves the built SPA from `dist/web/` directly on its own port — set `ZIGHUB_SERVE_WEB=1` to force this in non-production too.
 
 ### Build the image locally
 

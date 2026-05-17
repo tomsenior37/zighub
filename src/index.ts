@@ -39,7 +39,7 @@ if (!integrity.ok) {
   failCorrupt(integrity.errors);
 }
 
-const app = buildServer({ logger: true });
+const app = await buildServer({ logger: true });
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   app.log.info({ signal }, "shutdown signal received");
