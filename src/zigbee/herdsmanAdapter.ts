@@ -1,5 +1,6 @@
 import { Controller } from "zigbee-herdsman";
 import {
+  PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
   type CreateNetworkOptions,
   type NetworkInfo,
@@ -99,12 +100,34 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
       };
     },
 
-    permitJoin(): Promise<void> {
-      return Promise.reject(notImplError("permitJoin"));
+    async permitJoin(durationSec: number): Promise<void> {
+      if (!running || !controller) {
+        throw new ZigbeeAdapterError("NOT_RUNNING", "adapter is not running");
+      }
+      if (!Number.isInteger(durationSec) || durationSec < 0 || durationSec > PERMIT_JOIN_MAX_SEC) {
+        throw new ZigbeeAdapterError(
+          "INVALID_DURATION",
+          `durationSec must be integer in [0, ${PERMIT_JOIN_MAX_SEC.toString()}]; got ${durationSec.toString()}`,
+        );
+      }
+      await controller.permitJoin(durationSec);
     },
 
     getJoinStatus(): ZigbeeJoinStatus {
-      notImpl("getJoinStatus");
+      if (!running || !controller) {
+        return { active: false, remainingSec: 0 };
+      }
+      try {
+        const endsAt = controller.getPermitJoinEnd();
+        if (typeof endsAt !== "number" || endsAt <= 0) {
+          return { active: false, remainingSec: 0 };
+        }
+        const remainingMs = endsAt - Date.now();
+        if (remainingMs <= 0) return { active: false, remainingSec: 0 };
+        return { active: true, remainingSec: Math.ceil(remainingMs / 1000) };
+      } catch {
+        return { active: false, remainingSec: 0 };
+      }
     },
 
     listJoinedDevices(): Promise<ZigbeeJoinedDevice[]> {

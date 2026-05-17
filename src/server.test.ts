@@ -360,6 +360,93 @@ describe("/api/network/create", () => {
   });
 });
 
+describe("/api/network/permit-join", () => {
+  it("opens permit-join, returns active status, audit-logs", async () => {
+    const db = new Database(":memory:");
+    migrate(db);
+    const adapter = createMockAdapter({ now: () => 1_000_000 });
+    await adapter.start();
+
+    app = await buildServer({ zigbeeAdapter: adapter, db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/network/permit-join",
+      payload: { durationSec: 60 },
+    });
+    expect(res.statusCode).toBe(200);
+    const body: { active: boolean; remainingSec: number } = res.json();
+    expect(body.active).toBe(true);
+    expect(body.remainingSec).toBeGreaterThan(0);
+
+    const audit = db
+      .prepare("SELECT event FROM audit_log WHERE category = ?")
+      .all("network") as Array<{ event: string }>;
+    expect(audit).toEqual([{ event: "permit-join-open" }]);
+
+    await adapter.stop();
+    db.close();
+  });
+
+  it("rejects durationSec > 255 with 400", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/network/permit-join",
+      payload: { durationSec: 300 },
+    });
+    expect(res.statusCode).toBe(400);
+
+    await adapter.stop();
+  });
+
+  it("durationSec=0 logs permit-join-stop", async () => {
+    const db = new Database(":memory:");
+    migrate(db);
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ zigbeeAdapter: adapter, db });
+    await app.ready();
+
+    await app.inject({
+      method: "POST",
+      url: "/api/network/permit-join",
+      payload: { durationSec: 30 },
+    });
+    await app.inject({
+      method: "POST",
+      url: "/api/network/permit-join",
+      payload: { durationSec: 0 },
+    });
+
+    const audit = db
+      .prepare("SELECT event FROM audit_log WHERE category = ?")
+      .all("network") as Array<{ event: string }>;
+    expect(audit.map((e) => e.event)).toEqual(["permit-join-open", "permit-join-stop"]);
+
+    await adapter.stop();
+    db.close();
+  });
+
+  it("GET returns the live status", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/network/permit-join" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ active: false, remainingSec: 0 });
+
+    await adapter.stop();
+  });
+});
+
 describe("/api/zigbee/status", () => {
   it("returns the adapter's getStatus when an adapter is wired in", async () => {
     const adapter = createMockAdapter({
