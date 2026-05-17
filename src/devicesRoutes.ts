@@ -1,6 +1,12 @@
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
-import { get as getDevice, list as listDevices } from "./domain/devices.js";
+import {
+  ValidationError,
+  get as getDevice,
+  list as listDevices,
+  rename as renameDevice,
+  setLocation,
+} from "./domain/devices.js";
 import { log as auditLog } from "./domain/auditLog.js";
 import { ZigbeeAdapterError, type ZigbeeAdapter } from "./zigbee/index.js";
 
@@ -42,6 +48,70 @@ export function registerDevicesRoutes(app: FastifyInstance, opts: DevicesRoutesO
     }
     return reply.send({ ...device, online: isOnline(device.last_seen_at, staleAfterMs) });
   });
+
+  app.patch<{
+    Params: { ieeeAddress: string };
+    Body: { friendly_name?: string; location_id?: number | null };
+  }>(
+    "/api/devices/:ieeeAddress",
+    {
+      schema: {
+        body: {
+          type: "object",
+          properties: {
+            friendly_name: { type: "string", minLength: 1, maxLength: 64 },
+            location_id: { type: ["integer", "null"] },
+          },
+          additionalProperties: false,
+          minProperties: 1,
+        },
+      },
+    },
+    (request, reply) => {
+      const { ieeeAddress } = request.params;
+      const existing = getDevice(db, ieeeAddress);
+      if (!existing) {
+        return reply.code(404).send({ error: "device_not_found", ieeeAddress });
+      }
+      try {
+        if (request.body.friendly_name !== undefined) {
+          renameDevice(db, ieeeAddress, request.body.friendly_name);
+          auditLog(db, {
+            category: "devices",
+            event: "renamed",
+            details: { ieeeAddress, friendly_name: request.body.friendly_name },
+          });
+        }
+        if (request.body.location_id !== undefined) {
+          setLocation(db, ieeeAddress, request.body.location_id);
+          auditLog(db, {
+            category: "devices",
+            event: "location-changed",
+            details: { ieeeAddress, location_id: request.body.location_id },
+          });
+        }
+      } catch (err) {
+        if (err instanceof ValidationError) {
+          if (err.message.includes("already in use")) {
+            return reply.code(409).send({ error: "name_collision", message: err.message });
+          }
+          if (err.message.includes("location") && err.message.includes("not found")) {
+            return reply.code(400).send({ error: "location_not_found", message: err.message });
+          }
+          return reply.code(400).send({ error: "invalid", message: err.message });
+        }
+        throw err;
+      }
+      const updated = getDevice(db, ieeeAddress);
+      if (!updated) {
+        return reply.code(404).send({ error: "device_not_found", ieeeAddress });
+      }
+      return reply.send({
+        ...updated,
+        online: isOnline(updated.last_seen_at, staleAfterMs),
+      });
+    },
+  );
 
   if (adapter) {
     app.get<{ Params: { ieeeAddress: string } }>(

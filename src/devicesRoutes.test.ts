@@ -118,6 +118,92 @@ describe("POST /api/devices/:ieeeAddress/command", () => {
   });
 });
 
+describe("PATCH /api/devices/:ieeeAddress", () => {
+  it("renames a device and audit-logs the rename", async () => {
+    createDevice(db, { z2m_id: "aa:bb", friendly_name: "original" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/api/devices/aa:bb",
+      payload: { friendly_name: "kitchen-switch" },
+    });
+    expect(res.statusCode).toBe(200);
+    const body: { friendly_name: string } = res.json();
+    expect(body.friendly_name).toBe("kitchen-switch");
+
+    const audit = listAudit(db, { category: "devices" }).filter((e) => e.event === "renamed");
+    expect(audit).toHaveLength(1);
+  });
+
+  it("returns 409 on name_collision", async () => {
+    createDevice(db, { z2m_id: "a", friendly_name: "alpha" });
+    createDevice(db, { z2m_id: "b", friendly_name: "beta" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/api/devices/a",
+      payload: { friendly_name: "beta" },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({ error: "name_collision" });
+  });
+
+  it("sets a valid location", async () => {
+    const loc = createLocation(db, { name: "Hallway" });
+    createDevice(db, { z2m_id: "aa:bb", friendly_name: "x" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/api/devices/aa:bb",
+      payload: { location_id: loc.id },
+    });
+    expect(res.statusCode).toBe(200);
+    const body: { location_id: number } = res.json();
+    expect(body.location_id).toBe(loc.id);
+  });
+
+  it("rejects empty body with 400", async () => {
+    createDevice(db, { z2m_id: "aa:bb", friendly_name: "x" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({ method: "PATCH", url: "/api/devices/aa:bb", payload: {} });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("returns 404 for unknown ieeeAddress", async () => {
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/api/devices/missing",
+      payload: { friendly_name: "x" },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+});
+
+describe("GET /api/locations", () => {
+  it("returns the list of locations", async () => {
+    createLocation(db, { name: "Kitchen" });
+    createLocation(db, { name: "Hallway" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/locations" });
+    expect(res.statusCode).toBe(200);
+    const body: Array<{ name: string }> = res.json();
+    expect(body.map((l) => l.name).sort()).toEqual(["Hallway", "Kitchen"]);
+  });
+});
+
 describe("GET /api/devices/:ieeeAddress/ping", () => {
   it("returns ok:true for a known joined device", async () => {
     createDevice(db, { z2m_id: "ping-1", friendly_name: "ping-test" });
