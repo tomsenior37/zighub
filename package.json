@@ -82,6 +82,7 @@
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",
     "serialport": "^13.0.0",
+    "yaml": "^2.9.0",
     "zigbee-herdsman": "^10.0.8"
   }
 }
