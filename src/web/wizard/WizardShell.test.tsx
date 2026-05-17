@@ -21,7 +21,17 @@ describe("WizardShell", () => {
     window.history.replaceState(null, "", "/");
     vi.stubGlobal(
       "fetch",
-      vi.fn(() => Promise.resolve(new Response("[]", { status: 200 }))),
+      vi.fn((input: RequestInfo | URL) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        const body = url.includes("/api/network") && !url.includes("permit-join") ? "null" : "[]";
+        return Promise.resolve(
+          new Response(body, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }),
     );
   });
   afterEach(() => {
