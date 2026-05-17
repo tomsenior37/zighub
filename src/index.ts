@@ -1,7 +1,7 @@
 import { buildServer } from "./server.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
-const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
+const PORT = Number.parseInt(process.env.PORT ?? "8282", 10);
 
 const app = buildServer({ logger: true });
 
