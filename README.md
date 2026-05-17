@@ -1,55 +1,100 @@
-# claude-code-template
+# zighub
 
-Project template for [Claude Code](https://claude.com/claude-code) with a structured AFK/HITL workflow and an autonomous task runner.
+Single-binary Zigbee hub + automation app. One Docker image replaces Home Assistant + Zigbee2MQTT for Zigbee-only households.
 
-## What's in here
+Status: **pre-alpha**. The HTTP backend, SQLite schema, and migration system are in place. Device pairing, the rule engine, UI, MCP, and cloud backups are still ahead. See `project/deliverables.md` for the full checklist.
 
+## Quick start (Docker)
+
+```sh
+docker pull ghcr.io/tomsenior37/zighub:edge
+
+docker run --rm \
+  -p 8282:8282 \
+  -v zighub-data:/data \
+  --name zighub \
+  ghcr.io/tomsenior37/zighub:edge
 ```
-ralph/                  # autonomous task runner
-  prompt.md             # iteration prompt Claude follows each loop
-  once.sh               # single supervised pass
-  afk.sh <N>            # sandboxed loop, exits early when no AFK tasks remain
-issues/
-  afk/                  # tasks safe for autonomous execution
-  afk/done/             # archive of completed AFK tasks
-  hitl/                 # tasks requiring a human — ralph ignores these
-CLAUDE.md               # project-level instructions for Claude
+
+Then open <http://localhost:8282/health> — you should see `{"status":"ok","version":"..."}`.
+
+Or with compose:
+
+```sh
+curl -O https://raw.githubusercontent.com/tomsenior37/zigbeeapp/main/docker-compose.yml
+docker compose up -d
 ```
 
-## Quick start
+### Zigbee coordinator passthrough
 
-1. Click **Use this template** on GitHub to create a new repo, then clone it.
-2. Bootstrap your stack inside Claude Code:
-   - Python → `/python-bootstrap`
-   - TypeScript/Node → `/ts-bootstrap`
-3. Draft a PRD with `/write-a-prd`, then `/prd-to-issues` to populate `issues/afk/`.
-4. Run the runner:
-   - `./ralph/once.sh` — one supervised iteration
-   - `./ralph/afk.sh 5` — up to 5 autonomous iterations, exits at `<promise>NO MORE TASKS</promise>`
+Pass your USB dongle through with `--device`:
 
-## What ralph does per iteration
+```sh
+docker run --rm \
+  -p 8282:8282 \
+  -v zighub-data:/data \
+  --device /dev/ttyUSB0 \
+  ghcr.io/tomsenior37/zighub:edge
+```
 
-1. Reads `issues/afk/*.md` + last 5 commits + `ralph/prompt.md`.
-2. Picks the next task by priority: bugfixes → dev infra → tracer bullets → polish → refactors.
-3. Detects the stack (`package.json` and/or `pyproject.toml`).
-4. Creates a feature branch (`feat/`, `fix/`, `chore/`, etc.).
-5. Implements via TDD.
-6. Runs the stack-appropriate tests + typecheck.
-7. Commits with conventional-commit format.
-8. Opens a draft PR (skips gracefully if `gh` isn't available).
-9. Moves the issue file to `issues/afk/done/`.
+The device path varies by host — typically `/dev/ttyUSB0` (CP210x-style adapters) or `/dev/ttyACM0` (CDC ACM, e.g. ConBee). On Linux the calling user generally needs to be in the `dialout` group; that's a host-side concern, not the container's.
 
-## AFK vs HITL
+Coordinator wiring isn't implemented yet — this just documents the deploy shape.
 
-- **AFK** issues live in `issues/afk/`. They are well-scoped, low-risk, and safe for the runner to pick up without supervision.
-- **HITL** issues live in `issues/hitl/`. They need a human in the loop — design decisions, ambiguous scope, sensitive changes. Ralph ignores them.
+### Configuration
 
-## Adding a changeset
+All overridable via env vars. The defaults baked into the image:
 
-Every PR that changes runtime behaviour adds a [changeset](https://github.com/changesets/changesets). Run `npx changeset` and pick a bump level (patch / minor / major) plus a short user-facing summary — the tool writes a markdown file under `.changeset/` that you commit alongside your code. On release, `npx changeset version` consumes those files to bump `package.json` and regenerate `CHANGELOG.md`. Conventional Commits still govern commit messages; changesets are orthogonal and track only what users see in the changelog.
+| Var | Default | Purpose |
+| --- | --- | --- |
+| `HOST` | `0.0.0.0` | Bind interface. Override if you only want loopback inside the container. |
+| `PORT` | `8282` | Web UI / HTTP port. |
+| `ZIGHUB_DB_PATH` | `/data/zighub.db` | SQLite path. Stays on the `zighub-data` volume by default. |
 
-## Requirements
+### Image tags
 
-- [Claude Code](https://claude.com/claude-code) CLI on `PATH`
-- `git`, `jq` (for `afk.sh`), and optionally `gh` for PR creation
-- `afk.sh` expects a `docker sandbox` command — adjust to your sandbox setup if different
+| Tag | When it moves |
+| --- | --- |
+| `:edge` | Every push to `main`. |
+| `:vX.Y.Z`, `:X.Y`, `:X` | Pushed on `v*` git tags. |
+| `:latest` | Most recent tagged release. |
+| `:sha-<short>` | Per-commit immutable. |
+
+Built multi-arch (`linux/amd64`, `linux/arm64`) by `.github/workflows/release-image.yml`.
+
+## Development
+
+Workflow lives in this repo's `ralph/` runner and AFK/HITL issue queues — see `CLAUDE.md` for project-level instructions. Stack: Node 22 + TypeScript, Fastify, better-sqlite3, Vitest. ESLint + Prettier + husky pre-commit. Changesets for versioning.
+
+```sh
+npm ci                # install
+npm run dev           # tsx watch
+npm run build         # compile to dist/ and copy SQL migrations
+npm start             # run the compiled server
+npm run db:migrate    # apply pending migrations to the configured DB
+npm test              # vitest run
+npm run typecheck     # tsc --noEmit
+npm run lint          # eslint . --max-warnings=0
+```
+
+### Build the image locally
+
+```sh
+docker build -t zighub:local .
+docker run --rm -p 8282:8282 -v zighub-data:/data zighub:local
+```
+
+### Ralph runner
+
+- `./ralph/once.sh` — one supervised iteration against `issues/afk/`.
+- `./ralph/afk.sh 5` — up to 5 autonomous iterations, exits at `<promise>NO MORE TASKS</promise>`.
+
+### Adding a changeset
+
+Every PR that changes runtime behaviour adds a [changeset](https://github.com/changesets/changesets). `npx changeset`, pick a bump level, write a short user-facing summary. On release, `npx changeset version` consumes those files to bump `package.json` and regenerate `CHANGELOG.md`.
+
+## Project docs
+
+- `project/project_scope.md` — full scope and architecture.
+- `project/decisions.md` — locked technical decisions.
+- `project/deliverables.md` — v1 checklist.

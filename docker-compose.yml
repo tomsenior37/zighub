@@ -1,0 +1,24 @@
+services:
+  zighub:
+    image: ghcr.io/tomsenior37/zighub:edge
+    # build: .   # uncomment to build locally from this repo instead of pulling
+    container_name: zighub
+    restart: unless-stopped
+    ports:
+      - "8282:8282"
+    volumes:
+      - zighub-data:/data
+    # USB Zigbee coordinator passthrough. Adjust the host path to whichever
+    # ttyACM*/ttyUSB* device your dongle enumerates as. On Linux the host user
+    # may also need to be in the `dialout` group. Comment this out for a
+    # no-coordinator test run.
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    environment:
+      # Override these as needed. Defaults baked into the image:
+      #   HOST=0.0.0.0  PORT=8282  ZIGHUB_DB_PATH=/data/zighub.db
+      # PORT: "8282"
+      # ZIGHUB_DB_PATH: "/data/zighub.db"
+
+volumes:
+  zighub-data:
