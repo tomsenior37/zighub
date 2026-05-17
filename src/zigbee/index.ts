@@ -10,6 +10,7 @@ export {
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
+  type PingResult,
   type Unsubscribe,
   type ZigbeeAdapter,
   type ZigbeeEvent,

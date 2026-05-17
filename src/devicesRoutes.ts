@@ -44,6 +44,18 @@ export function registerDevicesRoutes(app: FastifyInstance, opts: DevicesRoutesO
   });
 
   if (adapter) {
+    app.get<{ Params: { ieeeAddress: string } }>(
+      "/api/devices/:ieeeAddress/ping",
+      async (request, reply) => {
+        const { ieeeAddress } = request.params;
+        if (!getDevice(db, ieeeAddress)) {
+          return reply.code(404).send({ error: "device_not_found", ieeeAddress });
+        }
+        const result = await adapter.pingDevice(ieeeAddress);
+        return reply.send(result);
+      },
+    );
+
     app.post<{
       Params: { ieeeAddress: string };
       Body: Record<string, unknown>;

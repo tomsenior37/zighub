@@ -48,7 +48,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Live event stream subscription (messages, state changes)
 - [x] Device capability extraction from `definition.exposes`
 - [x] Manual command dispatch (set state, brightness, colour, etc.)
-- [ ] Device reachability check (ping/last_seen tracking)
+- [x] Device reachability check (ping/last_seen tracking)
 
 ---
 
