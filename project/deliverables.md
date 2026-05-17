@@ -26,7 +26,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] SQLite schema migrations system in place
 - [x] `Location` table and CRUD
 - [x] `Device` table and CRUD
-- [ ] `Automation` table and CRUD with draft/active/disabled states
+- [x] `Automation` table and CRUD with draft/active/disabled states
 - [ ] `BackupRecord` table and CRUD
 - [ ] `CloudProvider` table and CRUD
 - [ ] `AuditLog` table and write helper
