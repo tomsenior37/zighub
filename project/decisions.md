@@ -11,6 +11,7 @@ Locked-in answers to the open questions in `project_scope.md §11`. Update this 
 | Telemetry | **None in v1** | 2026-05-17 | No anonymous crash reporting or usage metrics. Logs stay local. Reconsider once a beta cohort exists. |
 | Licence model | **TBD — placeholder MIT** | 2026-05-17 | Template ships with MIT in `LICENSE`. Revisit before public release. |
 | MCP remote transport hosting | **Self-hosted only (v1)** | 2026-05-17 | No managed service. HTTP/SSE transport runs from the same container; user exposes it themselves if they want Claude.ai connector access. |
+| HTTP framework | **Fastify** | 2026-05-17 | Picked over Express for schema-first route validation (JSON Schema/typebox baked in), built-in async/await, structured logging via pino, and active maintenance. Express 5 is still light on first-party TypeScript and validation. `fastify.inject()` also gives us zero-network integration tests without pulling in supertest. |
 
 ## Implications for deliverables.md
 
