@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildServer } from "./server.js";
 import { VERSION } from "./version.js";
+import { createMockAdapter } from "./zigbee/mockAdapter.js";
 
 let app: FastifyInstance | undefined;
 const cleanupDirs: string[] = [];
@@ -110,5 +111,38 @@ describe("static web serving", () => {
 
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
+  });
+});
+
+describe("/api/zigbee/status", () => {
+  it("returns the adapter's getStatus when an adapter is wired in", async () => {
+    const adapter = createMockAdapter({
+      coordinatorPath: "/dev/ttyMOCK",
+      panId: 0x1a62,
+      channel: 11,
+    });
+    await adapter.start();
+
+    app = await buildServer({ zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/zigbee/status" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      running: true,
+      coordinatorPath: "/dev/ttyMOCK",
+      panId: 0x1a62,
+      channel: 11,
+    });
+
+    await adapter.stop();
+  });
+
+  it("returns 404 (no route) when no adapter is wired in", async () => {
+    app = await buildServer();
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/zigbee/status" });
+    expect(res.statusCode).toBe(404);
   });
 });
