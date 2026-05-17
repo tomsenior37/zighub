@@ -30,7 +30,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [ ] `BackupRecord` table and CRUD
 - [ ] `CloudProvider` table and CRUD
 - [x] `AuditLog` table and write helper
-- [ ] Database integrity check on startup
+- [x] Database integrity check on startup
 - [ ] Atomic backup of database file (consistent snapshot)
 
 ---
