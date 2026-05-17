@@ -299,13 +299,15 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 ## 14. Distribution & Install
 
-- [ ] Single-binary build pipeline (macOS, Windows, Linux)
-- [ ] Code signing on macOS and Windows
-- [ ] Auto-update mechanism
-- [ ] First-run experience tested on each platform
-- [ ] USB serial permissions handling per OS
-- [ ] Optional Docker image
-- [ ] Install documentation
+Per `project/decisions.md`, v1 ships as a Docker image only — no native installers, no code signing, no auto-update mechanism. Reconsider native packaging post-v1.0.
+
+- [ ] Docker image build pipeline (multi-arch: linux/amd64, linux/arm64)
+- [ ] Image published to ghcr.io/tomsenior37/zighub
+- [ ] Web UI default `localhost:8282` (overridable via `PORT`)
+- [ ] Coordinator USB device mount documented (`--device /dev/ttyUSB0`)
+- [ ] First-run experience tested via `docker pull` + `docker run`
+- [ ] docker-compose.yml example for typical deployment
+- [ ] Install documentation (Docker quick start, USB permissions per host OS)
 
 ---
 
