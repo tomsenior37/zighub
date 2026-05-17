@@ -109,25 +109,25 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 ## 5. Rule Engine
 
-- [ ] YAML schema definition for automations (with versioning)
-- [ ] YAML parser and validator
-- [ ] Trigger types: device event, time of day, sun event, manual
-- [ ] Condition types: device state, time window, day of week
-- [ ] Action primitives implemented:
-  - [ ] toggle
-  - [ ] set_state
-  - [ ] adjust_brightness (with min, max, step)
+- [x] YAML schema definition for automations (with versioning)
+- [x] YAML parser and validator
+- [~] Trigger types: device event, time of day, sun event, manual (device_event + manual done; time-of-day and sun-event deferred)
+- [x] Condition types: device state, time window, day of week
+- [~] Action primitives implemented:
+  - [x] toggle
+  - [x] set_state
+  - [x] adjust_brightness (with min, max, step)
   - [ ] set_colour
   - [ ] set_colour_temp
-  - [ ] send_notification
-  - [ ] delay
+  - [x] send_notification (logger-backed; real notifications deferred)
+  - [x] delay
   - [ ] run_automation
-- [ ] Event subscription and matching loop
-- [ ] Per-automation run history and counters
-- [ ] Error capture and surfacing (failed actions logged, surfaced in UI)
+- [x] Event subscription and matching loop
+- [x] Per-automation run history and counters
+- [~] Error capture and surfacing (errors stored on runs and surfaced in the history drawer)
 - [ ] Manual "test fire" of an automation
-- [ ] Enable / disable toggle per automation
-- [ ] Draft → Active promotion flow with mandatory user confirmation
+- [x] Enable / disable toggle per automation
+- [x] Draft → Active promotion flow with mandatory user confirmation
 - [ ] Automatic backup created before any approved change goes live
 
 ---
@@ -143,21 +143,21 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [ ] Save as draft
 
 ### 6.2 Manual YAML editor
-- [ ] Code editor with syntax highlighting
-- [ ] Inline validation feedback
-- [ ] Save as draft
+- [~] Code editor with syntax highlighting (plain textarea; highlighting deferred)
+- [x] Inline validation feedback
+- [x] Save as draft
 
 ### 6.3 Drafts management
-- [ ] Drafts list view, separate from active automations
+- [x] Drafts list view, separate from active automations
 - [ ] Plain-English summary rendered from YAML
-- [ ] Approve / edit / discard actions
+- [x] Approve / edit / discard actions
 - [ ] Diff view when editing an existing automation (draft vs current active)
 
 ### 6.4 Active automations view
 - [ ] Grouped by location
-- [ ] Run history per automation
-- [ ] Quick toggle enable/disable
-- [ ] Edit (creates a new draft)
+- [x] Run history per automation
+- [x] Quick toggle enable/disable
+- [x] Edit (creates a new draft)
 - [ ] Revert to previous version (via backup)
 
 ---
