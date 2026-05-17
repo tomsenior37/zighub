@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
+import { registerAutomationsRoutes } from "./automationsRoutes.js";
 import { registerCoordinatorRoutes } from "./coordinatorRoutes.js";
 import { registerDevicesRoutes } from "./devicesRoutes.js";
 import { registerLocationsRoutes } from "./locationsRoutes.js";
@@ -49,6 +50,7 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
     if (opts.zigbeeAdapter) devicesOpts.adapter = opts.zigbeeAdapter;
     registerDevicesRoutes(app, devicesOpts);
     registerLocationsRoutes(app, opts.db);
+    registerAutomationsRoutes(app, { db: opts.db });
   }
 
   if (opts.settings) {
