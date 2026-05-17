@@ -181,6 +181,39 @@ describe("zigbeeBridge deviceJoined", () => {
     expect(leftEvents[0]?.details).toMatchObject({ ieeeAddress: "cc:dd", hadRow: false });
   });
 
+  it("populates capabilities from getDeviceDefinition after a join", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    attachZigbeeBridge({ adapter, db });
+
+    adapter.simulateDefinition("dd:ee:ff", {
+      exposes: [{ type: "binary", access: 7, property: "state" }],
+    });
+    adapter.simulateDeviceJoin({ ieeeAddress: "dd:ee:ff", networkAddress: 1 });
+
+    await new Promise((r) => setImmediate(r));
+
+    const row = getDevice(db, "dd:ee:ff");
+    expect(row?.capabilities).toEqual([{ type: "binary", access: 7, property: "state" }]);
+  });
+
+  it("clears capabilities on rejoin if definition becomes unavailable", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    attachZigbeeBridge({ adapter, db });
+
+    adapter.simulateDefinition("ff:00:00", { exposes: [{ a: 1 }] });
+    adapter.simulateDeviceJoin({ ieeeAddress: "ff:00:00", networkAddress: 1 });
+    await new Promise((r) => setImmediate(r));
+
+    adapter.simulateDefinition("ff:00:00", null);
+    adapter.simulateDeviceJoin({ ieeeAddress: "ff:00:00", networkAddress: 1 });
+    await new Promise((r) => setImmediate(r));
+
+    const row = getDevice(db, "ff:00:00");
+    expect(row?.capabilities).toBeNull();
+  });
+
   it("handler errors are logged but never crash the caller", async () => {
     const adapter = createMockAdapter();
     await adapter.start();

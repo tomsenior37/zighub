@@ -40,6 +40,12 @@ export interface CreateNetworkOptions {
   panId?: number;
 }
 
+export interface DeviceDefinition {
+  modelId?: string;
+  manufacturerName?: string;
+  exposes: Record<string, unknown>[];
+}
+
 export interface ZigbeeAdapter {
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -50,6 +56,7 @@ export interface ZigbeeAdapter {
   onEvent(handler: ZigbeeEventHandler): Unsubscribe;
   createNetwork(opts?: CreateNetworkOptions): Promise<NetworkInfo>;
   getNetworkInfo(): NetworkInfo | null;
+  getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null>;
 }
 
 export const NETWORK_CHANNEL_MIN = 11;

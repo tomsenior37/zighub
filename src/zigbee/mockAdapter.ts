@@ -2,6 +2,7 @@ import {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
   type CreateNetworkOptions,
+  type DeviceDefinition,
   type NetworkInfo,
   type ZigbeeAdapter,
   type ZigbeeEvent,
@@ -24,6 +25,7 @@ export interface MockZigbeeAdapter extends ZigbeeAdapter {
   simulateDeviceJoin(device: ZigbeeJoinedDevice): void;
   simulateDeviceLeave(ieeeAddress: string): void;
   simulateMessage(ieeeAddress: string, payload: Record<string, unknown>): void;
+  simulateDefinition(ieeeAddress: string, definition: DeviceDefinition | null): void;
 }
 
 export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdapter {
@@ -35,6 +37,7 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
     handlers: new Set<ZigbeeEventHandler>(),
     permitJoinEndsAt: 0,
     network: null as NetworkInfo | null,
+    definitions: new Map<string, DeviceDefinition>(),
   };
 
   function ensureRunning(): void {
@@ -138,6 +141,18 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
 
     getNetworkInfo(): NetworkInfo | null {
       return state.network;
+    },
+
+    getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null> {
+      return Promise.resolve(state.definitions.get(ieeeAddress) ?? null);
+    },
+
+    simulateDefinition(ieeeAddress: string, definition: DeviceDefinition | null): void {
+      if (definition === null) {
+        state.definitions.delete(ieeeAddress);
+      } else {
+        state.definitions.set(ieeeAddress, definition);
+      }
     },
   };
 }

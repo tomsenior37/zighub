@@ -46,7 +46,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Device join event handler — store in DB with model lookup
 - [x] Device leave / unpair handler
 - [x] Live event stream subscription (messages, state changes)
-- [ ] Device capability extraction from `definition.exposes`
+- [x] Device capability extraction from `definition.exposes`
 - [ ] Manual command dispatch (set state, brightness, colour, etc.)
 - [ ] Device reachability check (ping/last_seen tracking)
 

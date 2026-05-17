@@ -7,6 +7,7 @@ export {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
   type CreateNetworkOptions,
+  type DeviceDefinition,
   type NetworkInfo,
   type Unsubscribe,
   type ZigbeeAdapter,
