@@ -65,7 +65,7 @@ Not targeted: complete non-technical users (they should buy a Hue bridge), large
 │                The App                       │
 │                                              │
 │  ┌────────────────────────────────────────┐  │
-│  │  Web UI (served on localhost:8080)      │  │
+│  │  Web UI (served on localhost:8282)      │  │
 │  │  - Wizard, devices, automations, settings│ │
 │  └────────────────────────────────────────┘  │
 │                                              │
