@@ -1,18 +1,31 @@
+import { useState } from "react";
 import { EmptyDevices } from "../components/devices/EmptyDevices";
 import { LocationGroup } from "../components/devices/LocationGroup";
+import { PairDrawer } from "../components/pair/PairDrawer";
 import { useDevices } from "../hooks/useDevices";
 
 export function DevicesPage() {
   const query = useDevices();
+  const [pairOpen, setPairOpen] = useState(false);
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-6 flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Devices</h1>
-        {query.isFetching && !query.isLoading && (
-          <span className="text-xs text-slate-400">refreshing…</span>
-        )}
+        <div className="flex items-center gap-3">
+          {query.isFetching && !query.isLoading && (
+            <span className="text-xs text-slate-400">refreshing…</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setPairOpen(true)}
+            className="rounded bg-sky-600 px-3 py-1 text-sm font-medium text-white hover:bg-sky-700"
+          >
+            Pair new device
+          </button>
+        </div>
       </header>
+      <PairDrawer open={pairOpen} onClose={() => setPairOpen(false)} />
 
       {query.isLoading && <p className="text-slate-500">Loading devices…</p>}
 

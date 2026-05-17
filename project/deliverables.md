@@ -75,8 +75,8 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [ ] Restore network from backup path
 
 ### 3.5 Device pairing loop
-- [ ] Permit-join toggle with countdown
-- [ ] Live list of newly joined devices in a tray
+- [x] Permit-join toggle with countdown
+- [x] Live list of newly joined devices in a tray
 - [ ] Auto-fetch model name from device database
 
 ### 3.6 Identification & naming wizard
@@ -102,7 +102,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Move device to different location
 - [ ] Unpair device with confirmation
 - [ ] Manual control panel (toggle, dim slider, colour picker as applicable)
-- [ ] Pairing mode button accessible outside the wizard
+- [x] Pairing mode button accessible outside the wizard
 - [ ] Add / rename / delete location
 
 ---
