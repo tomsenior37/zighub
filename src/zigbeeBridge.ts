@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 import { log as auditLog } from "./domain/auditLog.js";
-import { ValidationError, create, get as getDevice } from "./domain/devices.js";
+import { ValidationError, create, deleteDevice, get as getDevice } from "./domain/devices.js";
 import type { ZigbeeAdapter, ZigbeeEvent, ZigbeeJoinedDevice } from "./zigbee/index.js";
 
 export interface ZigbeeBridgeDeps {
@@ -61,6 +61,8 @@ export function attachZigbeeBridge(deps: ZigbeeBridgeDeps): ZigbeeBridge {
     try {
       if (event.type === "deviceJoined") {
         handleJoin(db, event.device);
+      } else if (event.type === "deviceLeft") {
+        handleLeave(db, event.ieeeAddress);
       }
     } catch (err) {
       logger?.error({ err, event }, "zigbeeBridge handler failed");
@@ -101,6 +103,28 @@ function handleJoin(db: Database.Database, device: ZigbeeJoinedDevice): void {
       modelId: device.modelId ?? null,
       manufacturerName: device.manufacturerName ?? null,
     },
+  });
+}
+
+function handleLeave(db: Database.Database, ieeeAddress: string): void {
+  const existing = getDevice(db, ieeeAddress);
+  if (existing) {
+    deleteDevice(db, ieeeAddress);
+    auditLog(db, {
+      category: "zigbee",
+      event: "device-left",
+      details: {
+        ieeeAddress,
+        hadRow: true,
+        friendlyName: existing.friendly_name,
+      },
+    });
+    return;
+  }
+  auditLog(db, {
+    category: "zigbee",
+    event: "device-left",
+    details: { ieeeAddress, hadRow: false },
   });
 }
 
