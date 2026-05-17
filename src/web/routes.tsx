@@ -6,7 +6,7 @@ import { DevicesPage } from "./pages/DevicesPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { WizardPage } from "./pages/WizardPage";
-import { isFirstRun } from "./hooks/useFirstRun";
+import { fetchIsFirstRun } from "./hooks/useFirstRun";
 
 export const routes: RouteObject[] = [
   {
@@ -14,8 +14,9 @@ export const routes: RouteObject[] = [
     children: [
       {
         path: "/",
-        loader: () => {
-          return isFirstRun() ? redirect("/wizard") : redirect("/devices");
+        loader: async () => {
+          const firstRun = await fetchIsFirstRun();
+          return firstRun ? redirect("/wizard") : redirect("/devices");
         },
       },
       { path: "/wizard", element: <WizardPage /> },

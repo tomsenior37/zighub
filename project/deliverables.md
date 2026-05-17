@@ -57,7 +57,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 ### 3.1 Wizard framework
 - [x] Multi-step wizard component with progress indicator
 - [x] Skip-and-return-later support where appropriate
-- [ ] First-run detection — wizard runs automatically on empty DB
+- [x] First-run detection — wizard runs automatically on empty DB
 
 ### 3.2 Welcome screen
 - [~] Three paths offered: fresh, restore from local, restore from cloud (UI present; restore paths stubbed pending §7 backend)
