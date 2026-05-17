@@ -13,7 +13,7 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci --include=dev
 
-COPY tsconfig.json tsconfig.build.json ./
+COPY tsconfig.json tsconfig.build.json vite.config.ts ./
 COPY scripts ./scripts
 COPY src ./src
 RUN npm run build
