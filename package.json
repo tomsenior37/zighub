@@ -40,6 +40,7 @@
   },
   "homepage": "https://github.com/tomsenior37/zigbeeapp#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.19.41",
     "eslint": "^9.39.4",
