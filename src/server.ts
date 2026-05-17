@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import { registerCoordinatorRoutes } from "./coordinatorRoutes.js";
 import type { SerialPortLister } from "./coordinator/serialPorts.js";
 import type { SettingsRepo } from "./domain/settings.js";
+import { registerEventStreamRoute } from "./eventsStream.js";
 import { registerNetworkRoutes } from "./networkRoutes.js";
 import { registerStaticWeb, shouldServeStaticWeb } from "./staticWeb.js";
 import { VERSION } from "./version.js";
@@ -32,6 +33,7 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
     if (opts.settings) networkOpts.settings = opts.settings;
     if (opts.db) networkOpts.db = opts.db;
     registerNetworkRoutes(app, opts.zigbeeAdapter, networkOpts);
+    registerEventStreamRoute(app, opts.zigbeeAdapter);
   }
 
   const coordinatorOpts: Parameters<typeof registerCoordinatorRoutes>[1] = {};
