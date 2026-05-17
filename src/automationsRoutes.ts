@@ -13,6 +13,7 @@ import {
   type Automation,
   type AutomationState,
 } from "./domain/automations.js";
+import { list as listRuns } from "./domain/automationRuns.js";
 import { log as auditLog } from "./domain/auditLog.js";
 import { parseAutomation } from "./rules/parser.js";
 
@@ -190,18 +191,27 @@ export function registerAutomationsRoutes(
     }
   });
 
+  app.get<{ Params: { id: string }; Querystring: { limit?: string } }>(
+    "/api/automations/:id/runs",
+    (request, reply) => {
+      const id = Number.parseInt(request.params.id, 10);
+      if (!Number.isFinite(id)) return reply.code(404).send({ error: "not_found" });
+      if (!getAutomation(db, id)) return reply.code(404).send({ error: "not_found" });
+      const limit = request.query.limit ? Number.parseInt(request.query.limit, 10) : 20;
+      return reply.send(listRuns(db, id, Number.isFinite(limit) ? limit : 20));
+    },
+  );
+
   app.delete<{ Params: { id: string } }>("/api/automations/:id", (request, reply) => {
     const id = Number.parseInt(request.params.id, 10);
     if (!Number.isFinite(id)) return reply.code(404).send({ error: "not_found" });
     const existing = getAutomation(db, id);
     if (!existing) return reply.code(404).send({ error: "not_found" });
     if (existing.state === "active") {
-      return reply
-        .code(409)
-        .send({
-          error: "active_cannot_delete",
-          message: "disable this automation before deleting",
-        });
+      return reply.code(409).send({
+        error: "active_cannot_delete",
+        message: "disable this automation before deleting",
+      });
     }
     deleteAutomation(db, id);
     auditLog(db, { category: "automations", event: "deleted", details: { id } });

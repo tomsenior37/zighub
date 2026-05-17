@@ -1,10 +1,22 @@
 import type Database from "better-sqlite3";
 import { list as listAutomations, type Automation } from "../domain/automations.js";
+import { record as recordRun } from "../domain/automationRuns.js";
 import type { ZigbeeAdapter, ZigbeeEvent } from "../zigbee/index.js";
 import { executeAction, type ActionLogger } from "./actions.js";
 import { conditionsMatch, type DeviceStateGetter } from "./conditions.js";
 import { parseAutomation } from "./parser.js";
 import { triggerMatches } from "./triggers.js";
+
+function summariseEvent(event: ZigbeeEvent | "manual"): Record<string, unknown> {
+  if (event === "manual") return { type: "manual" };
+  if (event.type === "deviceMessage") {
+    return { type: "deviceMessage", ieeeAddress: event.ieeeAddress };
+  }
+  if (event.type === "deviceJoined") {
+    return { type: "deviceJoined", ieeeAddress: event.device.ieeeAddress };
+  }
+  return { type: "deviceLeft", ieeeAddress: event.ieeeAddress };
+}
 
 export interface RuleEngineDeps {
   adapter: ZigbeeAdapter;
@@ -43,15 +55,34 @@ export function attachRuleEngine(deps: RuleEngineDeps): RuleEngine {
     if (event !== "manual" && !triggerMatches(parsed.doc.trigger, event)) return;
     if (!conditionsMatch(parsed.doc.conditions, now(), getDeviceState)) return;
 
+    const startedMs = Date.now();
+    let ok = true;
+    let error: string | null = null;
+
     for (const action of parsed.doc.actions) {
       const result = await executeAction(action, { adapter, ...(logger ? { logger } : {}) });
       if (!result.ok) {
+        ok = false;
+        error = result.error;
         logger?.warn?.(
           { automationId: automation.id, action: action.type, error: result.error },
           "automation action failed",
         );
         break;
       }
+    }
+
+    try {
+      const input: Parameters<typeof recordRun>[1] = {
+        automation_id: automation.id,
+        duration_ms: Date.now() - startedMs,
+        ok,
+        trigger_summary: summariseEvent(event),
+      };
+      if (error !== null) input.error = error;
+      recordRun(db, input);
+    } catch (err) {
+      logger?.error?.({ automationId: automation.id, err }, "failed to record run");
     }
   }
 
