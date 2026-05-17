@@ -29,6 +29,7 @@ WORKDIR /app
 # Linux for USB serial-port enumeration. Without it /api/coordinators/ports
 # returns 500 ENOENT (spawn udevadm).
 RUN apk add --no-cache eudev \
+  && ln -sf /sbin/udevadm /usr/bin/udevadm \
   && addgroup -S zighub \
   && adduser -S -G zighub -h /app zighub \
   && mkdir -p /data \
@@ -37,7 +38,8 @@ RUN apk add --no-cache eudev \
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=8282 \
-    ZIGHUB_DB_PATH=/data/zighub.db
+    ZIGHUB_DB_PATH=/data/zighub.db \
+    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 COPY --from=build --chown=zighub:zighub /app/dist ./dist
 COPY --from=build --chown=zighub:zighub /app/node_modules ./node_modules
