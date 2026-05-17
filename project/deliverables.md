@@ -55,7 +55,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 ## 3. Setup Wizard
 
 ### 3.1 Wizard framework
-- [ ] Multi-step wizard component with progress indicator
+- [~] Multi-step wizard component with progress indicator (route stub at `/wizard` is in place; stepper UI to come)
 - [ ] Skip-and-return-later support where appropriate
 - [ ] First-run detection — wizard runs automatically on empty DB
 
