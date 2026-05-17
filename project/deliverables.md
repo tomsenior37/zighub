@@ -23,7 +23,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 ## 1. Core Backend & Storage
 
-- [ ] SQLite schema migrations system in place
+- [x] SQLite schema migrations system in place
 - [ ] `Location` table and CRUD
 - [ ] `Device` table and CRUD
 - [ ] `Automation` table and CRUD with draft/active/disabled states
