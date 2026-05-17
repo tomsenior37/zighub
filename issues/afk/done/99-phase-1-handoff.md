@@ -17,3 +17,14 @@ Ralph must NOT attempt to implement this issue. When it's encountered as the nex
 ## Notes
 - The numbering (`99-`) is deliberate — comes after all numbered Phase 1 work.
 - If there's still other Phase 1 work pending, pick that first and ignore this file.
+
+## Handoff resolution (2026-05-17)
+
+Sentinel retired by the user — explicit autonomy grant to continue past the Phase 1 stop and proceed with Phase 2. Architectural decisions called out in this issue were resolved as follows (see `project/decisions.md` for the full table):
+
+- HTTP framework: **Fastify** (locked in issue 02).
+- Frontend scaffold: **Vite + React 19 + TypeScript**, served from Fastify in production, Vite dev server in dev. Tailwind CSS v4 baseline, React Router (data router), TanStack Query for server state. No component kit in v1.
+- zigbee-herdsman testing strategy: **mock adapter behind a `ZigbeeAdapter` interface**, no hardware in CI. Real adapter is gated by `ZIGBEE_ENABLED`.
+- Worker-thread split: **deferred** to v1.x — single-process for now; revisit only with data.
+
+Phase 2 issues p2-02 through p2-12 generated in the same PR.
