@@ -146,6 +146,35 @@ describe("/api/coordinators/ports", () => {
   });
 });
 
+describe("/api/coordinators/detect", () => {
+  it("returns detected coordinators sorted by confidence", async () => {
+    app = await buildServer({
+      serialPortLister: {
+        list: () =>
+          Promise.resolve([
+            { path: "/dev/ttyMouse", manufacturer: "Generic USB Mouse" },
+            {
+              path: "/dev/ttyUSB0",
+              vendorId: "10c4",
+              productId: "ea60",
+              manufacturer: "Silicon Labs",
+            },
+            { path: "/dev/ttyACM0", vendorId: "1cf1", productId: "ffff" },
+          ]),
+      },
+    });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/coordinators/detect" });
+    expect(res.statusCode).toBe(200);
+    const body: Array<{ path: string; confidence: string }> = res.json();
+    expect(body.map((d) => ({ path: d.path, confidence: d.confidence }))).toEqual([
+      { path: "/dev/ttyUSB0", confidence: "high" },
+      { path: "/dev/ttyACM0", confidence: "medium" },
+    ]);
+  });
+});
+
 describe("/api/zigbee/status", () => {
   it("returns the adapter's getStatus when an adapter is wired in", async () => {
     const adapter = createMockAdapter({

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { detectCoordinators } from "./coordinator/detect.js";
 import { listSerialPorts, type SerialPortLister } from "./coordinator/serialPorts.js";
 
 export interface CoordinatorRoutesOptions {
@@ -11,5 +12,9 @@ export function registerCoordinatorRoutes(
 ): void {
   app.get("/api/coordinators/ports", async () => {
     return listSerialPorts(opts.lister);
+  });
+
+  app.get("/api/coordinators/detect", async () => {
+    return detectCoordinators(opts.lister);
   });
 }
