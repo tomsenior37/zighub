@@ -29,7 +29,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] `Automation` table and CRUD with draft/active/disabled states
 - [ ] `BackupRecord` table and CRUD
 - [ ] `CloudProvider` table and CRUD
-- [ ] `AuditLog` table and write helper
+- [x] `AuditLog` table and write helper
 - [ ] Database integrity check on startup
 - [ ] Atomic backup of database file (consistent snapshot)
 
