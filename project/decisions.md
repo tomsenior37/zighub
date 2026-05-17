@@ -12,6 +12,11 @@ Locked-in answers to the open questions in `project_scope.md §11`. Update this 
 | Licence model | **TBD — placeholder MIT** | 2026-05-17 | Template ships with MIT in `LICENSE`. Revisit before public release. |
 | MCP remote transport hosting | **Self-hosted only (v1)** | 2026-05-17 | No managed service. HTTP/SSE transport runs from the same container; user exposes it themselves if they want Claude.ai connector access. |
 | HTTP framework | **Fastify** | 2026-05-17 | Picked over Express for schema-first route validation (JSON Schema/typebox baked in), built-in async/await, structured logging via pino, and active maintenance. Express 5 is still light on first-party TypeScript and validation. `fastify.inject()` also gives us zero-network integration tests without pulling in supertest. |
+| Frontend stack | **Vite + React 19 + TypeScript** | 2026-05-17 | Per scope §5 recommendation. Frontend lives in `src/web/`, built to `dist/web/`. In production Fastify serves the built assets; in dev the Vite dev server proxies API calls to the backend. Sharing types between FE/BE is the key win. |
+| Frontend styling | **Tailwind CSS v4, no component library** | 2026-05-17 | Keep the design surface small for v1. Picking a component kit (shadcn, mantine, etc.) before the wizard UX is sketched would just be churn. Revisit after first wizard pass. |
+| Frontend routing & data | **React Router (data router) + TanStack Query** | 2026-05-17 | Standard pair for app shells with route-level loaders and server-state caching. No additional global store needed in v1. |
+| zigbee-herdsman testing strategy | **Mock adapter behind a `ZigbeeAdapter` interface; no hardware in CI** | 2026-05-17 | All code that touches Zigbee goes through a `ZigbeeAdapter` seam. The real adapter wraps `zigbee-herdsman` and is gated behind `ZIGBEE_ENABLED`. The mock adapter is used in unit / integration tests. Real-coordinator smoke testing is a manual artifact outside CI. |
+| Worker-thread split for zigbee | **Single-process v1; revisit if measurable** | 2026-05-17 | The cost of a worker-thread boundary (postMessage serialization, lifecycle complexity) is not justified before we have evidence of event-loop blocking under real traffic. Add metrics first; split only if data demands it. |
 
 ## Implications for deliverables.md
 
