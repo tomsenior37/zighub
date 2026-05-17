@@ -47,7 +47,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Device leave / unpair handler
 - [x] Live event stream subscription (messages, state changes)
 - [x] Device capability extraction from `definition.exposes`
-- [ ] Manual command dispatch (set state, brightness, colour, etc.)
+- [x] Manual command dispatch (set state, brightness, colour, etc.)
 - [ ] Device reachability check (ping/last_seen tracking)
 
 ---
@@ -95,7 +95,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 
 ## 4. Device Management UI
 
-- [ ] Devices list grouped by location
+- [x] Devices list grouped by location
 - [ ] "Needs setup" tray prominent at top when non-empty
 - [ ] Per-device card showing state, capabilities, last-seen
 - [ ] Rename device

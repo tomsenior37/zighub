@@ -46,6 +46,11 @@ export interface DeviceDefinition {
   exposes: Record<string, unknown>[];
 }
 
+export interface CommandResult {
+  accepted: boolean;
+  result?: unknown;
+}
+
 export interface ZigbeeAdapter {
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -57,6 +62,7 @@ export interface ZigbeeAdapter {
   createNetwork(opts?: CreateNetworkOptions): Promise<NetworkInfo>;
   getNetworkInfo(): NetworkInfo | null;
   getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null>;
+  sendCommand(ieeeAddress: string, payload: Record<string, unknown>): Promise<CommandResult>;
 }
 
 export const NETWORK_CHANNEL_MIN = 11;

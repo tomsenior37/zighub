@@ -2,6 +2,7 @@ import { Controller } from "zigbee-herdsman";
 import {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
+  type CommandResult,
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
@@ -150,6 +151,53 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
 
     getNetworkInfo(): NetworkInfo | null {
       return pendingNetwork;
+    },
+
+    async sendCommand(
+      ieeeAddress: string,
+      payload: Record<string, unknown>,
+    ): Promise<CommandResult> {
+      if (!running || !controller) {
+        throw new ZigbeeAdapterError("NOT_RUNNING", "adapter is not running");
+      }
+      const device = controller.getDeviceByIeeeAddr(ieeeAddress) as
+        | { endpoints?: Array<{ command: (...args: unknown[]) => Promise<unknown> }> }
+        | undefined;
+      if (!device) {
+        throw new ZigbeeAdapterError("UNKNOWN_DEVICE", `device ${ieeeAddress} not paired`);
+      }
+      const endpoint = device.endpoints?.[0];
+      if (!endpoint) {
+        throw new ZigbeeAdapterError(
+          "COMMAND_FAILED",
+          `device ${ieeeAddress} has no endpoint to dispatch to`,
+        );
+      }
+
+      try {
+        if (payload.state === "ON" || payload.state === "OFF" || payload.state === "TOGGLE") {
+          const cmd = payload.state === "ON" ? "on" : payload.state === "OFF" ? "off" : "toggle";
+          await endpoint.command("genOnOff", cmd, {});
+          return { accepted: true };
+        }
+        if (typeof payload.brightness === "number") {
+          await endpoint.command("genLevelCtrl", "moveToLevel", {
+            level: payload.brightness,
+            transtime: 0,
+          });
+          return { accepted: true };
+        }
+        throw new ZigbeeAdapterError(
+          "COMMAND_FAILED",
+          `unsupported payload for v1 herdsman adapter; keys: ${Object.keys(payload).join(",")}`,
+        );
+      } catch (err) {
+        if (err instanceof ZigbeeAdapterError) throw err;
+        throw new ZigbeeAdapterError(
+          "COMMAND_FAILED",
+          err instanceof Error ? err.message : String(err),
+        );
+      }
     },
 
     getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null> {

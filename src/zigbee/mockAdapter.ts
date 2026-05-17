@@ -1,6 +1,7 @@
 import {
   PERMIT_JOIN_MAX_SEC,
   ZigbeeAdapterError,
+  type CommandResult,
   type CreateNetworkOptions,
   type DeviceDefinition,
   type NetworkInfo,
@@ -21,11 +22,17 @@ export interface MockAdapterOptions {
   channel?: number;
 }
 
+export interface MockCommandLogEntry {
+  ieeeAddress: string;
+  payload: Record<string, unknown>;
+}
+
 export interface MockZigbeeAdapter extends ZigbeeAdapter {
   simulateDeviceJoin(device: ZigbeeJoinedDevice): void;
   simulateDeviceLeave(ieeeAddress: string): void;
   simulateMessage(ieeeAddress: string, payload: Record<string, unknown>): void;
   simulateDefinition(ieeeAddress: string, definition: DeviceDefinition | null): void;
+  getCommandLog(): MockCommandLogEntry[];
 }
 
 export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdapter {
@@ -38,6 +45,7 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
     permitJoinEndsAt: 0,
     network: null as NetworkInfo | null,
     definitions: new Map<string, DeviceDefinition>(),
+    commandLog: [] as Array<{ ieeeAddress: string; payload: Record<string, unknown> }>,
   };
 
   function ensureRunning(): void {
@@ -153,6 +161,15 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
       } else {
         state.definitions.set(ieeeAddress, definition);
       }
+    },
+
+    sendCommand(ieeeAddress: string, payload: Record<string, unknown>): Promise<CommandResult> {
+      state.commandLog.push({ ieeeAddress, payload: { ...payload } });
+      return Promise.resolve({ accepted: true });
+    },
+
+    getCommandLog(): Array<{ ieeeAddress: string; payload: Record<string, unknown> }> {
+      return [...state.commandLog];
     },
   };
 }
