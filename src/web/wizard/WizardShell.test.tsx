@@ -1,20 +1,31 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WizardShell } from "./WizardShell";
 
 function renderShell() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <WizardShell />
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <WizardShell />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
 describe("WizardShell", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response("[]", { status: 200 }))),
+    );
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("starts on the Welcome step", () => {
