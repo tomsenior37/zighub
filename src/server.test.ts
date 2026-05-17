@@ -114,6 +114,38 @@ describe("static web serving", () => {
   });
 });
 
+describe("/api/coordinators/ports", () => {
+  it("returns the list of serial ports from the injected lister", async () => {
+    app = await buildServer({
+      serialPortLister: {
+        list: () =>
+          Promise.resolve([
+            {
+              path: "/dev/ttyUSB0",
+              manufacturer: "Silicon Labs",
+              vendorId: "0x10C4",
+              productId: "EA60",
+            },
+            { path: "/dev/ttyACM0", manufacturer: "ConBee" },
+          ]),
+      },
+    });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/coordinators/ports" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([
+      {
+        path: "/dev/ttyUSB0",
+        manufacturer: "Silicon Labs",
+        vendorId: "10c4",
+        productId: "ea60",
+      },
+      { path: "/dev/ttyACM0", manufacturer: "ConBee" },
+    ]);
+  });
+});
+
 describe("/api/zigbee/status", () => {
   it("returns the adapter's getStatus when an adapter is wired in", async () => {
     const adapter = createMockAdapter({

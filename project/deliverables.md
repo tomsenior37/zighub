@@ -38,7 +38,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 ## 2. Zigbee Stack Integration
 
 - [~] zigbee-herdsman wired in and tested with a real coordinator (adapter skeleton wired in behind `ZigbeeAdapter`, gated by `ZIGBEE_ENABLED=1`; real-coordinator smoke test is a manual QA artefact)
-- [ ] USB serial port enumeration
+- [x] USB serial port enumeration
 - [ ] Coordinator auto-detection by USB VID/PID (Sonoff Dongle-E, ConBee II/III, Slaeshs CC2652, others)
 - [ ] Manual coordinator selection fallback
 - [ ] Network creation (new random PAN ID, network key)
