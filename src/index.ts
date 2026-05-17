@@ -3,6 +3,7 @@ import { getDb, resolveDbPath } from "./db/connection.js";
 import { runIntegrityCheck } from "./db/integrity.js";
 import { log as auditLog } from "./domain/auditLog.js";
 import { buildServer } from "./server.js";
+import { createZigbeeAdapter } from "./zigbee/factory.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
 const PORT = Number.parseInt(process.env.PORT ?? "8282", 10);
@@ -39,11 +40,30 @@ if (!integrity.ok) {
   failCorrupt(integrity.errors);
 }
 
-const app = await buildServer({ logger: true });
+const coordinatorPath = process.env.ZIGHUB_COORDINATOR_PATH;
+const zigbee = createZigbeeAdapter(
+  {
+    ...(coordinatorPath !== undefined && { coordinatorPath }),
+    databasePath: dbPath,
+  },
+  {
+    logger: { warn: (msg) => console.warn(`[zigbee] ${msg}`) },
+  },
+);
+
+const app = await buildServer({ logger: true, zigbeeAdapter: zigbee.adapter });
+app.log.info({ kind: zigbee.kind, reason: zigbee.reason }, "zigbee adapter ready");
+
+try {
+  await zigbee.adapter.start();
+} catch (err) {
+  app.log.error({ err }, "zigbee adapter failed to start");
+}
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   app.log.info({ signal }, "shutdown signal received");
   try {
+    await zigbee.adapter.stop();
     await app.close();
     db.close();
     process.exit(0);

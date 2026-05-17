@@ -1,11 +1,14 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerStaticWeb, shouldServeStaticWeb } from "./staticWeb.js";
 import { VERSION } from "./version.js";
+import { registerZigbeeRoutes } from "./zigbeeRoutes.js";
+import type { ZigbeeAdapter } from "./zigbee/index.js";
 
 export interface BuildServerOptions {
   logger?: boolean;
   staticWebRoot?: string;
   serveStaticWeb?: boolean;
+  zigbeeAdapter?: ZigbeeAdapter;
 }
 
 export async function buildServer(opts: BuildServerOptions = {}): Promise<FastifyInstance> {
@@ -14,6 +17,10 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
   });
 
   app.get("/health", () => ({ status: "ok", version: VERSION }));
+
+  if (opts.zigbeeAdapter) {
+    registerZigbeeRoutes(app, opts.zigbeeAdapter);
+  }
 
   const serveWeb = opts.serveStaticWeb ?? shouldServeStaticWeb();
   if (serveWeb) {
