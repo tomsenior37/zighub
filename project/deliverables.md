@@ -55,13 +55,13 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 ## 3. Setup Wizard
 
 ### 3.1 Wizard framework
-- [~] Multi-step wizard component with progress indicator (route stub at `/wizard` is in place; stepper UI to come)
-- [ ] Skip-and-return-later support where appropriate
+- [x] Multi-step wizard component with progress indicator
+- [x] Skip-and-return-later support where appropriate
 - [ ] First-run detection — wizard runs automatically on empty DB
 
 ### 3.2 Welcome screen
-- [ ] Three paths offered: fresh, restore from local, restore from cloud
-- [ ] Help links / explanations of each path
+- [~] Three paths offered: fresh, restore from local, restore from cloud (UI present; restore paths stubbed pending §7 backend)
+- [~] Help links / explanations of each path (cards have descriptions; doc anchors stubbed)
 
 ### 3.3 Coordinator detection
 - [ ] Auto-detect step with retry
