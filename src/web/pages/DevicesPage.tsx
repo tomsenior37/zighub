@@ -1,12 +1,44 @@
+import { EmptyDevices } from "../components/devices/EmptyDevices";
+import { LocationGroup } from "../components/devices/LocationGroup";
+import { useDevices } from "../hooks/useDevices";
+
 export function DevicesPage() {
+  const query = useDevices();
+
   return (
-    <section className="mx-auto max-w-2xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-slate-900">Devices</h1>
-      <p className="mt-3 text-slate-600">
-        Once paired, devices will appear here grouped by location, with rename / move / unpair
-        controls and a live state preview. Pairing flows through the wizard or the &ldquo;Pair new
-        device&rdquo; button on this page (to come).
-      </p>
+    <section className="mx-auto max-w-5xl px-6 py-10">
+      <header className="mb-6 flex items-baseline justify-between">
+        <h1 className="text-2xl font-semibold text-slate-900">Devices</h1>
+        {query.isFetching && !query.isLoading && (
+          <span className="text-xs text-slate-400">refreshing…</span>
+        )}
+      </header>
+
+      {query.isLoading && <p className="text-slate-500">Loading devices…</p>}
+
+      {query.isError && (
+        <div
+          role="alert"
+          className="rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+        >
+          <p className="font-medium">Could not load devices.</p>
+          <button
+            type="button"
+            onClick={() => void query.refetch()}
+            className="mt-2 inline-block rounded bg-rose-600 px-3 py-1 text-white hover:bg-rose-700"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {query.isSuccess && query.data.length === 0 && <EmptyDevices />}
+
+      {query.isSuccess &&
+        query.data.length > 0 &&
+        query.data.map((group, idx) => (
+          <LocationGroup key={group.location?.id ?? `unassigned-${idx.toString()}`} group={group} />
+        ))}
     </section>
   );
 }
