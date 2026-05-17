@@ -3,7 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
+import Database from "better-sqlite3";
 import { buildServer } from "./server.js";
+import { migrate } from "./db/migrate.js";
+import { createSettingsRepo, SETTINGS_KEYS } from "./domain/settings.js";
 import { VERSION } from "./version.js";
 import { createMockAdapter } from "./zigbee/mockAdapter.js";
 
@@ -172,6 +175,126 @@ describe("/api/coordinators/detect", () => {
       { path: "/dev/ttyUSB0", confidence: "high" },
       { path: "/dev/ttyACM0", confidence: "medium" },
     ]);
+  });
+});
+
+describe("/api/coordinators/select", () => {
+  function makeApp() {
+    const db = new Database(":memory:");
+    migrate(db);
+    const settings = createSettingsRepo(db);
+    const lister = {
+      list: () =>
+        Promise.resolve([
+          { path: "/dev/ttyUSB0", vendorId: "10c4", productId: "ea60" },
+          { path: "/dev/ttyACM0", vendorId: "1cf1", productId: "0030" },
+        ]),
+    };
+    return { db, settings, lister };
+  }
+
+  it("persists a valid selection and returns it", async () => {
+    const { settings, lister } = makeApp();
+    app = await buildServer({ serialPortLister: lister, settings });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: { path: "/dev/ttyUSB0" },
+    });
+    expect(res.statusCode).toBe(200);
+    const body: { path: string; selectedAt: number } = res.json();
+    expect(body.path).toBe("/dev/ttyUSB0");
+    expect(typeof body.selectedAt).toBe("number");
+
+    expect(settings.get(SETTINGS_KEYS.COORDINATOR_PATH)).toEqual({
+      path: "/dev/ttyUSB0",
+      selectedAt: body.selectedAt,
+    });
+  });
+
+  it("rejects a path not in the current serial port list with 400 port_not_found", async () => {
+    const { settings, lister } = makeApp();
+    app = await buildServer({ serialPortLister: lister, settings });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: { path: "/dev/ttyDOESNOTEXIST" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "port_not_found", path: "/dev/ttyDOESNOTEXIST" });
+  });
+
+  it("re-selecting overwrites the previous selection", async () => {
+    const { settings, lister } = makeApp();
+    app = await buildServer({ serialPortLister: lister, settings });
+    await app.ready();
+
+    await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: { path: "/dev/ttyUSB0" },
+    });
+    const second = await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: { path: "/dev/ttyACM0" },
+    });
+    expect(second.statusCode).toBe(200);
+    const stored = settings.get<{ path: string }>(SETTINGS_KEYS.COORDINATOR_PATH);
+    expect(stored?.path).toBe("/dev/ttyACM0");
+  });
+
+  it("rejects empty or malformed bodies with 400", async () => {
+    const { settings, lister } = makeApp();
+    app = await buildServer({ serialPortLister: lister, settings });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: {},
+    });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe("/api/coordinators/selected", () => {
+  it("returns null when nothing is selected yet", async () => {
+    const db = new Database(":memory:");
+    migrate(db);
+    const settings = createSettingsRepo(db);
+    app = await buildServer({ settings });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/coordinators/selected" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("null");
+  });
+
+  it("returns the stored selection after a successful POST", async () => {
+    const db = new Database(":memory:");
+    migrate(db);
+    const settings = createSettingsRepo(db);
+    const lister = {
+      list: () => Promise.resolve([{ path: "/dev/ttyUSB0" }]),
+    };
+    app = await buildServer({ settings, serialPortLister: lister });
+    await app.ready();
+
+    await app.inject({
+      method: "POST",
+      url: "/api/coordinators/select",
+      payload: { path: "/dev/ttyUSB0" },
+    });
+
+    const res = await app.inject({ method: "GET", url: "/api/coordinators/selected" });
+    expect(res.statusCode).toBe(200);
+    const body: { path: string } = res.json();
+    expect(body.path).toBe("/dev/ttyUSB0");
   });
 });
 

@@ -40,7 +40,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [~] zigbee-herdsman wired in and tested with a real coordinator (adapter skeleton wired in behind `ZigbeeAdapter`, gated by `ZIGBEE_ENABLED=1`; real-coordinator smoke test is a manual QA artefact)
 - [x] USB serial port enumeration
 - [x] Coordinator auto-detection by USB VID/PID (Sonoff Dongle-E, ConBee II/III, Slaeshs CC2652, others)
-- [ ] Manual coordinator selection fallback
+- [x] Manual coordinator selection fallback
 - [ ] Network creation (new random PAN ID, network key)
 - [ ] Permit-join window management (enable, disable, countdown)
 - [ ] Device join event handler — store in DB with model lookup

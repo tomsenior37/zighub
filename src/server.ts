@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { registerCoordinatorRoutes } from "./coordinatorRoutes.js";
 import type { SerialPortLister } from "./coordinator/serialPorts.js";
+import type { SettingsRepo } from "./domain/settings.js";
 import { registerStaticWeb, shouldServeStaticWeb } from "./staticWeb.js";
 import { VERSION } from "./version.js";
 import { registerZigbeeRoutes } from "./zigbeeRoutes.js";
@@ -12,6 +13,7 @@ export interface BuildServerOptions {
   serveStaticWeb?: boolean;
   zigbeeAdapter?: ZigbeeAdapter;
   serialPortLister?: SerialPortLister;
+  settings?: SettingsRepo;
 }
 
 export async function buildServer(opts: BuildServerOptions = {}): Promise<FastifyInstance> {
@@ -25,7 +27,10 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
     registerZigbeeRoutes(app, opts.zigbeeAdapter);
   }
 
-  registerCoordinatorRoutes(app, opts.serialPortLister ? { lister: opts.serialPortLister } : {});
+  const coordinatorOpts: Parameters<typeof registerCoordinatorRoutes>[1] = {};
+  if (opts.serialPortLister) coordinatorOpts.lister = opts.serialPortLister;
+  if (opts.settings) coordinatorOpts.settings = opts.settings;
+  registerCoordinatorRoutes(app, coordinatorOpts);
 
   const serveWeb = opts.serveStaticWeb ?? shouldServeStaticWeb();
   if (serveWeb) {
