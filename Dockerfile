@@ -25,7 +25,11 @@ RUN npm prune --omit=dev
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
-RUN addgroup -S zighub \
+# eudev provides udevadm, which @serialport/bindings-cpp shells out to on
+# Linux for USB serial-port enumeration. Without it /api/coordinators/ports
+# returns 500 ENOENT (spawn udevadm).
+RUN apk add --no-cache eudev \
+  && addgroup -S zighub \
   && adduser -S -G zighub -h /app zighub \
   && mkdir -p /data \
   && chown -R zighub:zighub /data /app
