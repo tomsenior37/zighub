@@ -59,3 +59,16 @@ export async function patchJson<T>(path: string, payload: unknown): Promise<T> {
   }
   return (await res.json()) as T;
 }
+
+export async function deleteJson(path: string): Promise<void> {
+  const res = await fetch(path, { method: "DELETE" });
+  if (!res.ok) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+    throw new ApiError(res.status, body, `DELETE ${path} returned ${res.status.toString()}`);
+  }
+}
