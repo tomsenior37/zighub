@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { DevicesPage } from "./DevicesPage";
@@ -120,5 +121,36 @@ describe("DevicesPage", () => {
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+  });
+
+  it("requires confirmation before unpairing a device", async () => {
+    const fetchSpy = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.endsWith("/api/devices/00%3A11") && init?.method === "DELETE") {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      if (url.endsWith("/api/devices")) {
+        return Promise.resolve(
+          new Response(JSON.stringify(fakeDeviceGroup()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      return Promise.resolve(new Response("not found", { status: 404 }));
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText("kitchen-light")).toBeInTheDocument();
+    await user.click(screen.getAllByRole("button", { name: /^unpair$/i })[0]!);
+    expect(screen.getByText(/unpair kitchen-light/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /confirm unpair/i }));
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith("/api/devices/00%3A11", { method: "DELETE" });
+    });
   });
 });

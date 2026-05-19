@@ -169,6 +169,17 @@ export function createMockAdapter(opts: MockAdapterOptions = {}): MockZigbeeAdap
       return Promise.resolve({ accepted: true });
     },
 
+    unpairDevice(ieeeAddress: string): Promise<void> {
+      return Promise.resolve().then(() => {
+        ensureRunning();
+        const existed = state.devices.delete(ieeeAddress);
+        if (!existed) {
+          throw new ZigbeeAdapterError("UNKNOWN_DEVICE", `device ${ieeeAddress} not paired`);
+        }
+        emit({ type: "deviceLeft", ieeeAddress });
+      });
+    },
+
     pingDevice(ieeeAddress: string): Promise<PingResult> {
       const known = state.devices.has(ieeeAddress);
       return Promise.resolve(known ? { ok: true, latencyMs: 1 } : { ok: false });

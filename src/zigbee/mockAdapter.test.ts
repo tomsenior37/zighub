@@ -144,6 +144,27 @@ describe("mockAdapter events", () => {
     expect(await adapter.listJoinedDevices()).toHaveLength(0);
   });
 
+  it("unpairDevice removes a known device and emits deviceLeft", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+
+    const handler = vi.fn();
+    adapter.onEvent(handler);
+    adapter.simulateDeviceJoin({ ieeeAddress: "aa:bb", networkAddress: 1 });
+    handler.mockClear();
+
+    await adapter.unpairDevice("aa:bb");
+    expect(handler).toHaveBeenCalledWith({ type: "deviceLeft", ieeeAddress: "aa:bb" });
+    expect(await adapter.listJoinedDevices()).toHaveLength(0);
+  });
+
+  it("unpairDevice rejects unknown devices", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+
+    await expect(adapter.unpairDevice("missing")).rejects.toMatchObject({ code: "UNKNOWN_DEVICE" });
+  });
+
   it("simulateMessage emits deviceMessage with the payload", async () => {
     const adapter = createMockAdapter();
     await adapter.start();

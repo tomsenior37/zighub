@@ -100,7 +100,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [~] Per-device card showing state, capabilities, last-seen (online badge + last-seen relative; live state controls still to come)
 - [x] Rename device
 - [x] Move device to different location
-- [ ] Unpair device with confirmation
+- [x] Unpair device with confirmation
 - [ ] Manual control panel (toggle, dim slider, colour picker as applicable)
 - [x] Pairing mode button accessible outside the wizard
 - [ ] Add / rename / delete location

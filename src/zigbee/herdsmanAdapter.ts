@@ -216,6 +216,26 @@ export function createHerdsmanAdapter(opts: HerdsmanAdapterOptions): ZigbeeAdapt
       }
     },
 
+    async unpairDevice(ieeeAddress: string): Promise<void> {
+      if (!running || !controller) {
+        throw new ZigbeeAdapterError("NOT_RUNNING", "adapter is not running");
+      }
+      const device = controller.getDeviceByIeeeAddr(ieeeAddress) as
+        | { removeFromNetwork?: () => Promise<void> }
+        | undefined;
+      if (!device || typeof device.removeFromNetwork !== "function") {
+        throw new ZigbeeAdapterError("UNKNOWN_DEVICE", `device ${ieeeAddress} not paired`);
+      }
+      try {
+        await device.removeFromNetwork();
+      } catch (err) {
+        throw new ZigbeeAdapterError(
+          "UNPAIR_FAILED",
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    },
+
     getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null> {
       if (!running || !controller) return Promise.resolve(null);
       try {

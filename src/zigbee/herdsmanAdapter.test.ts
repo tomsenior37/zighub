@@ -5,6 +5,7 @@ const stopMock = vi.fn();
 const getNetworkParametersMock = vi.fn();
 const permitJoinMock = vi.fn();
 const getPermitJoinEndMock = vi.fn();
+const getDeviceByIeeeAddrMock = vi.fn();
 
 vi.mock("zigbee-herdsman", () => {
   class FakeController {
@@ -13,6 +14,7 @@ vi.mock("zigbee-herdsman", () => {
     getNetworkParameters = getNetworkParametersMock;
     permitJoin = permitJoinMock;
     getPermitJoinEnd = getPermitJoinEndMock;
+    getDeviceByIeeeAddr = getDeviceByIeeeAddrMock;
   }
   return { Controller: FakeController };
 });
@@ -26,6 +28,7 @@ beforeEach(() => {
   getNetworkParametersMock.mockReset();
   permitJoinMock.mockReset().mockResolvedValue(undefined);
   getPermitJoinEndMock.mockReset().mockReturnValue(0);
+  getDeviceByIeeeAddrMock.mockReset();
 });
 
 describe("herdsmanAdapter lifecycle", () => {
@@ -158,5 +161,58 @@ describe("herdsmanAdapter permitJoin", () => {
     expect(status.active).toBe(true);
     expect(status.remainingSec).toBeGreaterThan(28);
     expect(status.remainingSec).toBeLessThanOrEqual(30);
+  });
+});
+
+describe("herdsmanAdapter unpairDevice", () => {
+  it("calls removeFromNetwork on the herdsman device", async () => {
+    const removeFromNetwork = vi.fn().mockResolvedValue(undefined);
+    getDeviceByIeeeAddrMock.mockReturnValue({ removeFromNetwork });
+    const adapter = createHerdsmanAdapter({
+      coordinatorPath: "/dev/ttyUSB0",
+      databasePath: "/tmp/zighub.db",
+    });
+    await adapter.start();
+
+    await adapter.unpairDevice("aa:bb");
+
+    expect(getDeviceByIeeeAddrMock).toHaveBeenCalledWith("aa:bb");
+    expect(removeFromNetwork).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects when not running", async () => {
+    const adapter = createHerdsmanAdapter({
+      coordinatorPath: "/dev/ttyUSB0",
+      databasePath: "/tmp/zighub.db",
+    });
+
+    await expect(adapter.unpairDevice("aa:bb")).rejects.toMatchObject({ code: "NOT_RUNNING" });
+  });
+
+  it("rejects when the controller does not know the device", async () => {
+    getDeviceByIeeeAddrMock.mockReturnValue(undefined);
+    const adapter = createHerdsmanAdapter({
+      coordinatorPath: "/dev/ttyUSB0",
+      databasePath: "/tmp/zighub.db",
+    });
+    await adapter.start();
+
+    await expect(adapter.unpairDevice("aa:bb")).rejects.toMatchObject({ code: "UNKNOWN_DEVICE" });
+  });
+
+  it("wraps remove failures", async () => {
+    getDeviceByIeeeAddrMock.mockReturnValue({
+      removeFromNetwork: vi.fn().mockRejectedValue(new Error("leave failed")),
+    });
+    const adapter = createHerdsmanAdapter({
+      coordinatorPath: "/dev/ttyUSB0",
+      databasePath: "/tmp/zighub.db",
+    });
+    await adapter.start();
+
+    await expect(adapter.unpairDevice("aa:bb")).rejects.toMatchObject({
+      code: "UNPAIR_FAILED",
+      message: "leave failed",
+    });
   });
 });
