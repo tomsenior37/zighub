@@ -118,6 +118,56 @@ describe("POST /api/devices/:ieeeAddress/command", () => {
   });
 });
 
+describe("DELETE /api/devices/:ieeeAddress", () => {
+  it("unpairs through the adapter, deletes the row, and audit-logs", async () => {
+    createDevice(db, { z2m_id: "aa:bb", friendly_name: "lamp" });
+    const adapter = createMockAdapter();
+    await adapter.start();
+    adapter.simulateDeviceJoin({ ieeeAddress: "aa:bb", networkAddress: 1 });
+    app = await buildServer({ db, zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "DELETE", url: "/api/devices/aa:bb" });
+    expect(res.statusCode).toBe(204);
+
+    const getRes = await app.inject({ method: "GET", url: "/api/devices/aa:bb" });
+    expect(getRes.statusCode).toBe(404);
+
+    const audit = listAudit(db, { category: "devices" }).filter((e) => e.event === "unpaired");
+    expect(audit).toHaveLength(1);
+    expect(audit[0]?.details).toMatchObject({ ieeeAddress: "aa:bb", friendlyName: "lamp" });
+
+    await adapter.stop();
+  });
+
+  it("returns 404 when the device is not in the DB", async () => {
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ db, zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "DELETE", url: "/api/devices/missing" });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "device_not_found", ieeeAddress: "missing" });
+
+    await adapter.stop();
+  });
+
+  it("returns 404 when the adapter no longer knows the device", async () => {
+    createDevice(db, { z2m_id: "aa:bb", friendly_name: "lamp" });
+    const adapter = createMockAdapter();
+    await adapter.start();
+    app = await buildServer({ db, zigbeeAdapter: adapter });
+    await app.ready();
+
+    const res = await app.inject({ method: "DELETE", url: "/api/devices/aa:bb" });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ error: "UNKNOWN_DEVICE" });
+
+    await adapter.stop();
+  });
+});
+
 describe("PATCH /api/devices/:ieeeAddress", () => {
   it("renames a device and audit-logs the rename", async () => {
     createDevice(db, { z2m_id: "aa:bb", friendly_name: "original" });

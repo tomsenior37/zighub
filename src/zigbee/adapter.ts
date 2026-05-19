@@ -68,6 +68,7 @@ export interface ZigbeeAdapter {
   getNetworkInfo(): NetworkInfo | null;
   getDeviceDefinition(ieeeAddress: string): Promise<DeviceDefinition | null>;
   sendCommand(ieeeAddress: string, payload: Record<string, unknown>): Promise<CommandResult>;
+  unpairDevice(ieeeAddress: string): Promise<void>;
   pingDevice(ieeeAddress: string): Promise<PingResult>;
 }
 

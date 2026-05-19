@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Device } from "../../hooks/useDevices";
 import { useLocations } from "../../hooks/useLocations";
+import { useUnpairDevice } from "../../hooks/useUnpairDevice";
 import { useUpdateDevice } from "../../hooks/useUpdateDevice";
 import { relativeTime } from "../../lib/relativeTime";
 
@@ -10,6 +11,8 @@ interface DeviceCardProps {
 
 export function DeviceCard({ device }: DeviceCardProps) {
   const [editing, setEditing] = useState(false);
+  const [confirmUnpair, setConfirmUnpair] = useState(false);
+  const unpairDevice = useUnpairDevice();
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -56,6 +59,49 @@ export function DeviceCard({ device }: DeviceCardProps) {
         <dd>{relativeTime(device.last_seen_at)}</dd>
       </dl>
       {editing && <DeviceEditForm device={device} onDone={() => setEditing(false)} />}
+      <div className="mt-4 border-t border-slate-200 pt-3">
+        {confirmUnpair ? (
+          <div className="rounded border border-rose-200 bg-rose-50 p-3">
+            <p className="text-sm font-medium text-rose-900">Unpair {device.friendly_name}?</p>
+            <p className="mt-1 text-sm text-rose-700">
+              This removes the device from the Zigbee network and from zighub.
+            </p>
+            {unpairDevice.isError && (
+              <p role="alert" className="mt-2 text-sm text-rose-700">
+                {unpairDevice.error.status === 404
+                  ? "The device is no longer paired."
+                  : "Could not unpair the device."}
+              </p>
+            )}
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                disabled={unpairDevice.isPending}
+                onClick={() => unpairDevice.mutate(device.z2m_id)}
+                className="rounded bg-rose-600 px-3 py-1 text-sm font-medium text-white hover:bg-rose-700 disabled:bg-slate-300"
+              >
+                {unpairDevice.isPending ? "Unpairing..." : "Confirm unpair"}
+              </button>
+              <button
+                type="button"
+                disabled={unpairDevice.isPending}
+                onClick={() => setConfirmUnpair(false)}
+                className="rounded border border-slate-300 px-3 py-1 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmUnpair(true)}
+            className="rounded border border-rose-300 px-3 py-1 text-sm text-rose-700 hover:bg-rose-50"
+          >
+            Unpair
+          </button>
+        )}
+      </div>
     </article>
   );
 }

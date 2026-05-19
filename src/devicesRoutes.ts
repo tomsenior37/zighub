@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import {
   ValidationError,
   get as getDevice,
+  deleteDevice,
   list as listDevices,
   rename as renameDevice,
   setLocation,
@@ -157,6 +158,33 @@ export function registerDevicesRoutes(app: FastifyInstance, opts: DevicesRoutesO
           }
           throw err;
         }
+      },
+    );
+
+    app.delete<{ Params: { ieeeAddress: string } }>(
+      "/api/devices/:ieeeAddress",
+      async (request, reply) => {
+        const { ieeeAddress } = request.params;
+        const device = getDevice(db, ieeeAddress);
+        if (!device) {
+          return reply.code(404).send({ error: "device_not_found", ieeeAddress });
+        }
+        try {
+          await adapter.unpairDevice(ieeeAddress);
+        } catch (err) {
+          if (err instanceof ZigbeeAdapterError) {
+            const status = err.code === "UNKNOWN_DEVICE" ? 404 : 502;
+            return reply.code(status).send({ error: err.code, message: err.message });
+          }
+          throw err;
+        }
+        deleteDevice(db, ieeeAddress);
+        auditLog(db, {
+          category: "devices",
+          event: "unpaired",
+          details: { ieeeAddress, friendlyName: device.friendly_name },
+        });
+        return reply.code(204).send();
       },
     );
   }
