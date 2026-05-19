@@ -4,7 +4,7 @@ Locked-in answers to the open questions in `project_scope.md §11`. Update this 
 
 | Question | Decision | Date | Notes |
 | --- | --- | --- | --- |
-| Working title / project name | **zighub** | 2026-05-17 | Free on npm registry as of decision date. UI title, binary name, npm package name. Repo currently `zigbeeapp` — rename to `zighub` is a follow-up. |
+| Working title / project name | **zighub** | 2026-05-17 | Free on npm registry as of decision date. UI title, binary name, npm package name. Repository renamed to `tomsenior37/zighub`. |
 | Language / runtime | **Node.js + TypeScript** | 2026-05-17 | Per scope §5 recommendation. `zigbee-herdsman` is Node-native, single-binary packaging mature, shared types across backend/frontend. |
 | Desktop wrapper | **None — pure web UI** | 2026-05-17 | Backend serves a React/Vite SPA on `localhost:8282` (default; overridable via `PORT`). No Electron, no Tauri. Reconsider after v1.0 if user feedback demands a native shell. |
 | Distribution format | **Docker image + pure web UI** | 2026-05-17 | One image, user mounts coordinator via `--device`. Defers native installer + code-signing work to v1.1+. Section §14 of deliverables.md is scoped accordingly. |
