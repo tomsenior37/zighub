@@ -35,15 +35,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tomsenior37/zigbeeapp.git"
+    "url": "git+https://github.com/tomsenior37/zighub.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tomsenior37/zigbeeapp/issues"
+    "url": "https://github.com/tomsenior37/zighub/issues"
   },
-  "homepage": "https://github.com/tomsenior37/zigbeeapp#readme",
+  "homepage": "https://github.com/tomsenior37/zighub#readme",
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@eslint/js": "^9.39.4",

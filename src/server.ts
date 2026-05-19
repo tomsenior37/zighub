@@ -11,7 +11,7 @@ import { registerEventStreamRoute } from "./eventsStream.js";
 import { registerNetworkRoutes } from "./networkRoutes.js";
 import { registerStaticWeb, shouldServeStaticWeb } from "./staticWeb.js";
 import { VERSION } from "./version.js";
-import { registerZigbeeRoutes } from "./zigbeeRoutes.js";
+import { registerZigbeeRoutes, type ZigbeeRuntimeInfo } from "./zigbeeRoutes.js";
 import type { ZigbeeAdapter } from "./zigbee/index.js";
 
 export interface BuildServerOptions {
@@ -22,6 +22,7 @@ export interface BuildServerOptions {
   serialPortLister?: SerialPortLister;
   settings?: SettingsRepo;
   db?: Database.Database;
+  zigbeeRuntime?: ZigbeeRuntimeInfo;
 }
 
 export async function buildServer(opts: BuildServerOptions = {}): Promise<FastifyInstance> {
@@ -32,7 +33,7 @@ export async function buildServer(opts: BuildServerOptions = {}): Promise<Fastif
   app.get("/health", () => ({ status: "ok", version: VERSION }));
 
   if (opts.zigbeeAdapter) {
-    registerZigbeeRoutes(app, opts.zigbeeAdapter);
+    registerZigbeeRoutes(app, opts.zigbeeAdapter, opts.zigbeeRuntime);
     const networkOpts: Parameters<typeof registerNetworkRoutes>[2] = {};
     if (opts.settings) networkOpts.settings = opts.settings;
     if (opts.db) networkOpts.db = opts.db;

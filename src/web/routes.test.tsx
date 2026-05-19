@@ -1,9 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { routes } from "./routes";
 import { createQueryClient } from "./queryClient";
+
+function jsonResponse(body: unknown, status = 200) {
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+}
 
 function renderAt(initialPath: string) {
   const router = createMemoryRouter(routes, { initialEntries: [initialPath] });
@@ -15,6 +24,32 @@ function renderAt(initialPath: string) {
 }
 
 describe("router", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/api/setup-state")) {
+          return jsonResponse({ firstRunComplete: false });
+        }
+        if (url.endsWith("/api/zigbee/status")) {
+          return jsonResponse({
+            running: true,
+            adapterMode: "mock",
+            adapterReason: "ZIGBEE_ENABLED is not '1'",
+            mockMode: true,
+          });
+        }
+        return jsonResponse(null, 404);
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders the wizard page at /wizard", async () => {
     renderAt("/wizard");
     expect(await screen.findByRole("heading", { name: /setup wizard/i })).toBeInTheDocument();
@@ -57,5 +92,12 @@ describe("router", () => {
     renderAt("/wizard");
     const nav = await screen.findByRole("navigation", { name: /primary/i });
     expect(nav).toHaveTextContent("Setup wizard");
+  });
+
+  it("shows the current Zigbee adapter mode in the nav", async () => {
+    renderAt("/devices");
+    const mode = await screen.findByLabelText(/zigbee adapter mode/i);
+    expect(mode).toHaveTextContent("Mock adapter - running");
+    expect(mode).toHaveAttribute("title", expect.stringContaining("ZIGBEE_ENABLED is not '1'"));
   });
 });

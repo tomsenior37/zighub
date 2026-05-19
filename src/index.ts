@@ -59,6 +59,10 @@ const zigbee = createZigbeeAdapter(
 const app = await buildServer({
   logger: true,
   zigbeeAdapter: zigbee.adapter,
+  zigbeeRuntime: {
+    adapterMode: zigbee.kind,
+    adapterReason: zigbee.reason,
+  },
   settings,
   db,
 });

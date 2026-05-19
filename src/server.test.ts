@@ -456,7 +456,13 @@ describe("/api/zigbee/status", () => {
     });
     await adapter.start();
 
-    app = await buildServer({ zigbeeAdapter: adapter });
+    app = await buildServer({
+      zigbeeAdapter: adapter,
+      zigbeeRuntime: {
+        adapterMode: "mock",
+        adapterReason: "ZIGBEE_ENABLED is not '1'",
+      },
+    });
     await app.ready();
 
     const res = await app.inject({ method: "GET", url: "/api/zigbee/status" });
@@ -466,6 +472,39 @@ describe("/api/zigbee/status", () => {
       coordinatorPath: "/dev/ttyMOCK",
       panId: 0x1a62,
       channel: 11,
+      adapterMode: "mock",
+      adapterReason: "ZIGBEE_ENABLED is not '1'",
+      mockMode: true,
+    });
+
+    await adapter.stop();
+  });
+
+  it("reports herdsman mode when runtime metadata says the real adapter is selected", async () => {
+    const adapter = createMockAdapter({
+      coordinatorPath: "/dev/ttyUSB0",
+      panId: 0x1a62,
+      channel: 11,
+    });
+    await adapter.start();
+
+    app = await buildServer({
+      zigbeeAdapter: adapter,
+      zigbeeRuntime: {
+        adapterMode: "herdsman",
+        adapterReason: "ZIGBEE_ENABLED=1 with coordinator + database paths configured",
+      },
+    });
+    await app.ready();
+
+    const res = await app.inject({ method: "GET", url: "/api/zigbee/status" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      adapterMode: "herdsman",
+      adapterReason: "ZIGBEE_ENABLED=1 with coordinator + database paths configured",
+      mockMode: false,
+      running: true,
+      coordinatorPath: "/dev/ttyUSB0",
     });
 
     await adapter.stop();
