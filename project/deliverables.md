@@ -101,7 +101,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [x] Rename device
 - [x] Move device to different location
 - [ ] Unpair device with confirmation
-- [ ] Manual control panel (toggle, dim slider, colour picker as applicable)
+- [~] Manual control panel (toggle + dim slider done; colour picker deferred until colour command support)
 - [x] Pairing mode button accessible outside the wizard
 - [ ] Add / rename / delete location
 

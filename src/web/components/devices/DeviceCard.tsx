@@ -3,6 +3,7 @@ import type { Device } from "../../hooks/useDevices";
 import { useLocations } from "../../hooks/useLocations";
 import { useUpdateDevice } from "../../hooks/useUpdateDevice";
 import { relativeTime } from "../../lib/relativeTime";
+import { DeviceControls } from "./DeviceControls";
 
 interface DeviceCardProps {
   device: Device;
@@ -55,6 +56,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
         <dt className="text-slate-400">Last seen</dt>
         <dd>{relativeTime(device.last_seen_at)}</dd>
       </dl>
+      <DeviceControls device={device} />
       {editing && <DeviceEditForm device={device} onDone={() => setEditing(false)} />}
     </article>
   );

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { DevicesPage } from "./DevicesPage";
@@ -20,7 +21,10 @@ function fakeDeviceGroup(): DeviceGroup[] {
           user_notes: null,
           created_at: "2026-05-17 10:00:00",
           last_seen_at: "2026-05-17 10:05:00",
-          capabilities: null,
+          capabilities: [
+            { type: "binary", property: "state", access: 7 },
+            { type: "numeric", property: "brightness", access: 7 },
+          ],
           online: true,
         },
       ],
@@ -120,5 +124,53 @@ describe("DevicesPage", () => {
       expect(screen.getByRole("alert")).toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+  });
+
+  it("sends manual device commands from exposed controls", async () => {
+    const fetchSpy = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.endsWith("/api/devices/00%3A11/command") && init?.method === "POST") {
+        return Promise.resolve(
+          new Response(JSON.stringify({ accepted: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify(fakeDeviceGroup()), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByRole("region", { name: /device controls/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^on$/i }));
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/devices/00%3A11/command",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ state: "ON" }),
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: /set brightness/i }));
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/devices/00%3A11/command",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ brightness: 127 }),
+        }),
+      );
+    });
   });
 });
