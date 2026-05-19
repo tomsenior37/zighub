@@ -1,12 +1,24 @@
 import { useState } from "react";
 import { EmptyDevices } from "../components/devices/EmptyDevices";
 import { LocationGroup } from "../components/devices/LocationGroup";
+import { NeedsSetupTray } from "../components/devices/NeedsSetupTray";
 import { PairDrawer } from "../components/pair/PairDrawer";
-import { useDevices } from "../hooks/useDevices";
+import { useDevices, type DeviceGroup } from "../hooks/useDevices";
+
+function splitDeviceGroups(groups: DeviceGroup[]): {
+  needsSetup: DeviceGroup | undefined;
+  locationGroups: DeviceGroup[];
+} {
+  return {
+    needsSetup: groups.find((group) => group.location === null),
+    locationGroups: groups.filter((group) => group.location !== null),
+  };
+}
 
 export function DevicesPage() {
   const query = useDevices();
   const [pairOpen, setPairOpen] = useState(false);
+  const groups = query.isSuccess ? splitDeviceGroups(query.data) : null;
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-10">
@@ -47,10 +59,11 @@ export function DevicesPage() {
 
       {query.isSuccess && query.data.length === 0 && <EmptyDevices />}
 
-      {query.isSuccess &&
-        query.data.length > 0 &&
-        query.data.map((group, idx) => (
-          <LocationGroup key={group.location?.id ?? `unassigned-${idx.toString()}`} group={group} />
+      {groups && <NeedsSetupTray devices={groups.needsSetup?.devices ?? []} />}
+
+      {groups &&
+        groups.locationGroups.map((group) => (
+          <LocationGroup key={group.location!.id} group={group} />
         ))}
     </section>
   );

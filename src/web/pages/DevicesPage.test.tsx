@@ -74,7 +74,7 @@ describe("DevicesPage", () => {
     expect(screen.getByText(/loading devices/i)).toBeInTheDocument();
   });
 
-  it("renders location groups and device cards on success", async () => {
+  it("renders a needs-setup tray before named location groups", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -87,10 +87,13 @@ describe("DevicesPage", () => {
     );
     renderPage();
 
+    expect(await screen.findByRole("heading", { name: /^needs setup$/i })).toBeInTheDocument();
+    expect(screen.getByText(/name and place newly joined devices/i)).toBeInTheDocument();
+    expect(screen.getByText("1 device")).toBeInTheDocument();
+    expect(screen.getByText("unassigned-sensor")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: /^kitchen$/i })).toBeInTheDocument();
     expect(screen.getByText("kitchen-light")).toBeInTheDocument();
-    expect(screen.getByText("unassigned-sensor")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /^unassigned$/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^unassigned$/i })).toBeNull();
   });
 
   it("renders the empty state when API returns an empty array", async () => {
