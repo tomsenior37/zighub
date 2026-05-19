@@ -96,7 +96,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 ## 4. Device Management UI
 
 - [x] Devices list grouped by location
-- [ ] "Needs setup" tray prominent at top when non-empty
+- [x] "Needs setup" tray prominent at top when non-empty
 - [~] Per-device card showing state, capabilities, last-seen (online badge + last-seen relative; live state controls still to come)
 - [x] Rename device
 - [x] Move device to different location
