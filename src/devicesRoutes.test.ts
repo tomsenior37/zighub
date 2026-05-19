@@ -204,6 +204,63 @@ describe("GET /api/locations", () => {
   });
 });
 
+describe("location write routes", () => {
+  it("creates, renames, and deletes a location with audit entries", async () => {
+    app = await buildServer({ db });
+    await app.ready();
+
+    const createRes = await app.inject({
+      method: "POST",
+      url: "/api/locations",
+      payload: { name: "Study" },
+    });
+    expect(createRes.statusCode).toBe(201);
+    const created: { id: number; name: string } = createRes.json();
+    expect(created.name).toBe("Study");
+
+    const renameRes = await app.inject({
+      method: "PATCH",
+      url: `/api/locations/${created.id.toString()}`,
+      payload: { name: "Office" },
+    });
+    expect(renameRes.statusCode).toBe(200);
+    const renamed: { name: string } = renameRes.json();
+    expect(renamed.name).toBe("Office");
+
+    const deleteRes = await app.inject({
+      method: "DELETE",
+      url: `/api/locations/${created.id.toString()}`,
+    });
+    expect(deleteRes.statusCode).toBe(204);
+
+    const audit = listAudit(db, { category: "locations" });
+    expect(audit.map((e) => e.event)).toEqual(["deleted", "renamed", "created"]);
+  });
+
+  it("returns 409 on duplicate root names", async () => {
+    createLocation(db, { name: "Kitchen" });
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/locations",
+      payload: { name: "Kitchen" },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({ error: "name_collision" });
+  });
+
+  it("returns 404 when deleting a missing location", async () => {
+    app = await buildServer({ db });
+    await app.ready();
+
+    const res = await app.inject({ method: "DELETE", url: "/api/locations/999" });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "location_not_found", id: 999 });
+  });
+});
+
 describe("GET /api/devices/:ieeeAddress/ping", () => {
   it("returns ok:true for a known joined device", async () => {
     createDevice(db, { z2m_id: "ping-1", friendly_name: "ping-test" });

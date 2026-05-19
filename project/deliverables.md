@@ -103,7 +103,7 @@ A checklist of every concrete deliverable needed to ship v1. Group order roughly
 - [ ] Unpair device with confirmation
 - [ ] Manual control panel (toggle, dim slider, colour picker as applicable)
 - [x] Pairing mode button accessible outside the wizard
-- [ ] Add / rename / delete location
+- [x] Add / rename / delete location
 
 ---
 
